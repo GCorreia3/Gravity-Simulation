@@ -7,16 +7,18 @@ from time import perf_counter
 
 pygame.init()
 
-game.OBJECTS.append(CelestialBody(game.WIDTH / 4, game.HEIGHT/2, (0, 0), 100, 20))
-game.OBJECTS.append(CelestialBody(game.WIDTH*3 / 4, game.HEIGHT/2, (0, 0), 100, 20))
+game.OBJECTS.append(CelestialBody(game.WIDTH / 4, game.HEIGHT/2, (0, 0.2), 10, 20))
+game.OBJECTS.append(CelestialBody(game.WIDTH / 2, game.HEIGHT/2, (0, 0), 1000, 30))
 
 running = True
+paused = True
 
 def draw_screen(delta_time):
     game.WIN.fill((0, 0, 0))
 
     for object in game.OBJECTS:
-        object.update(delta_time)
+        if not paused:
+            object.update(delta_time)
         object.draw()
 
     pygame.display.update()
@@ -37,6 +39,8 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 quit()
+            if event.key == pygame.K_SPACE:
+                paused = not paused
 
         elif event.type == pygame.QUIT:
             quit()
