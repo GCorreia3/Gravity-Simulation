@@ -23,7 +23,7 @@ def draw_screen(delta_time):
 
 def mouse_down(mouse):
     x, y = mouse
-    game.OBJECTS.append(CelestialBody(x, y, (random.random() * random.choice((-1, 1)) * 0.5, random.random() * random.choice((-1, 1)) * 0.5), 100, 20))
+    game.OBJECTS.append(CelestialBody(x, y, (0, 0), 100))
 
 def quit():
     pygame.quit()

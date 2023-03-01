@@ -1,14 +1,15 @@
 import pygame
 import game
+import math
 
 
 
 class CelestialBody():
-    def __init__(self, x, y, initial_velocity, mass, radius) -> None:
+    def __init__(self, x, y, initial_velocity, mass) -> None:
         self.x = x
         self.y = y
         self.mass = mass
-        self.radius = radius
+        self.radius = (self.mass / math.pi)**0.5
 
         self.velocity = initial_velocity
         self.acceleration = (0, 0)
@@ -17,8 +18,8 @@ class CelestialBody():
         self.attract()
         self.velocity = (self.velocity[0] + self.acceleration[0] * delta_time, self.velocity[1] + self.acceleration[1] * delta_time)
 
-        self.x += self.velocity[0]
-        self.y += self.velocity[1]
+        self.x += self.velocity[0] * delta_time
+        self.y += self.velocity[1] * delta_time
     
     def attract(self):
         accelerations = []
@@ -30,7 +31,7 @@ class CelestialBody():
 
                 if distance < self.radius:
                     combined_mass = self.mass + object.mass
-                    object_to_add.append(CelestialBody(self.x, self.y, ((self.mass*self.velocity[0] + object.mass*object.velocity[0]) / combined_mass, (self.mass*self.velocity[1] + object.mass*object.velocity[1]) / combined_mass), combined_mass, self.radius + (object.radius / 2)))
+                    object_to_add.append(CelestialBody(self.x, self.y, ((self.mass*self.velocity[0] + object.mass*object.velocity[0]) / combined_mass, (self.mass*self.velocity[1] + object.mass*object.velocity[1]) / combined_mass), combined_mass))
                     objects_to_remove.append(self)
                     objects_to_remove.append(object)
                 else:
