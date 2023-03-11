@@ -5,6 +5,7 @@ import pygame
 import sys
 import game
 from celestial_body import CelestialBody
+from custom_maths import Vector2D
 from time import perf_counter
 
 pygame.init() # Initialises pygame (only needs to be done once)
@@ -29,7 +30,7 @@ def draw_screen(delta_time):
 def mouse_down(mouse):
     x, y = mouse
     # Spawn new celestial body at the mouse position
-    game.OBJECTS.append(CelestialBody(x, y, (0, 0), 100))
+    game.OBJECTS.append(CelestialBody(Vector2D(x, y), Vector2D(0, 0), 100))
 
 def quit():
     # closes pygame and quits the application
