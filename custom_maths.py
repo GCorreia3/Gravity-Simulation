@@ -27,9 +27,18 @@ class Vector2D():
             self.x += arg
             self.y += arg
             return self
+        
+    def __sub__(self, arg):
+        if type(arg) == Vector2D:
+            return Vector2D(self.x - arg.x, self.y - arg.y)
+        else:
+            return Vector2D(self.x - arg, self.y - arg)
 
     def __mul__(self, arg):
         if type(arg) == Vector2D:
             return Vector2D(self.x * arg.x, self.y * arg.y)
         else:
             return Vector2D(self.x * arg, self.y * arg)
+
+    def magnitude(self):
+        return (self.x**2 + self.y**2)**0.5

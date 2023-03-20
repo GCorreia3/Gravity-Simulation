@@ -7,14 +7,26 @@ import game
 from celestial_body import CelestialBody
 from custom_maths import Vector2D
 from time import perf_counter
+import math
+import copy
 
 pygame.init() # Initialises pygame (only needs to be done once)
 
 running = True
 paused = True
 
+start_mouse_pos = (0, 0)
+end_mouse_pos = (0, 0)
+
+is_pressed = False
+
+calculating_trajectory = False
+
+positions = list()
+
 # Function which is called every frame to draw and update the objects
 def draw_screen(delta_time):
+    global positions
     game.WIN.fill((0, 0, 0)) # fills screen with colour
 
     # Loops through objects which are in the game list
@@ -25,12 +37,90 @@ def draw_screen(delta_time):
         # Runs the draw function of the object (draws the circle)
         object.draw()
 
+    if is_pressed:
+        pygame.draw.line(game.WIN, (0, 0, 255), start_mouse_pos, end_mouse_pos, 4)
+        pygame.draw.circle(game.WIN, (255, 0, 0), start_mouse_pos, (game.START_MASS / math.pi)**0.5)
+        global calculating_trajectory
+        if calculating_trajectory:
+            object = CelestialBody(Vector2D(start_mouse_pos[0], start_mouse_pos[1]), Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1]), game.START_MASS)
+            for i in range(1000):
+                object.position = iterate_pos(4 * delta_time, object)
+                positions.append(copy.deepcopy(object.position))
+            
+            calculating_trajectory = False
+
+        for i, pos in enumerate(positions):
+            if i < len(positions) - 1:
+                pygame.draw.line(game.WIN, (255, 255, 255), (pos.x, pos.y), (positions[i+1].x, positions[i+1].y), 2)
+    else:
+        positions.clear()
+
     pygame.display.update() # This just updates the screen
+
+def iterate_pos(delta_time, object: CelestialBody):
+    accelerations = []
+
+    for o in game.OBJECTS:
+            
+        o: CelestialBody = o
+        distance = game.get_dist(o.position.x, o.position.y, object.position.x, object.position.y)
+
+        force = game.G * (object.mass * o.mass / (distance)**2) # Only gets the magnitude of the force
+
+        # Gets direction from self to object
+        direction = (o.position.x - object.position.x, o.position.y - object.position.y)
+        direction_magnitude = (direction[0]**2 + direction[1]**2)**0.5
+
+        force_direction = Vector2D(direction[0] * (force / direction_magnitude), direction[1] * (force / direction_magnitude)) # Gives the force a direction with magnitude of the force magnitude calculated from newtons equation
+
+        # a = F/ m
+        accelerations.append((force_direction.x / object.mass, force_direction.y / object.mass))
+
+
+    x = 0
+    y = 0
+    for i in range(len(accelerations)):
+        x += accelerations[i][0]
+        y += accelerations[i][1]
+
+    object.acceleration = Vector2D(x, y)
+
+    object.velocity = Vector2D(object.velocity.x + object.acceleration.x * delta_time, object.velocity.y + object.acceleration.y * delta_time)
+
+    object.position += object.velocity * delta_time
+
+    return object.position
 
 def mouse_down(mouse):
     x, y = mouse
+
+    global start_mouse_pos
+    start_mouse_pos = (x, y)
+
+    global is_pressed, calculating_trajectory
+    is_pressed = True
+    calculating_trajectory = True
+
+def mouse_moved(mouse):
+    x, y = mouse
+    
+    global end_mouse_pos
+    end_mouse_pos = (x, y)
+
+    global positions
+    positions.clear()
+    global calculating_trajectory
+    calculating_trajectory = True
+    
+
+def mouse_up(start_mouse_pos, end_mouse_pos, start_mass):
     # Spawn new celestial body at the mouse position
-    game.OBJECTS.append(CelestialBody(Vector2D(x, y), Vector2D(0, 0), 100))
+    initial_velocity = Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1])
+
+    game.OBJECTS.append(CelestialBody(Vector2D(start_mouse_pos[0], start_mouse_pos[1]), initial_velocity, start_mass))
+
+    global is_pressed
+    is_pressed = False
 
 def quit():
     # closes pygame and quits the application
@@ -54,6 +144,20 @@ while running:
             if event.key == pygame.K_SPACE:
                 paused = not paused
 
+            if event.key == pygame.K_m:
+                game.OBJECTS.append(CelestialBody(Vector2D(game.WIDTH / 2, game.HEIGHT / 2), Vector2D(0, 0), 30000))
+
+            if event.key == pygame.K_UP:
+                if is_pressed:
+                    game.START_MASS *= 2
+
+            if event.key == pygame.K_DOWN:
+                if is_pressed:
+                    game.START_MASS *= 0.5
+
+            if event.key == pygame.K_r:
+                game.OBJECTS.clear()
+
         # Checks if the quit button in the top right is pressed on the window
         elif event.type == pygame.QUIT:
             quit()
@@ -61,6 +165,13 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse = pygame.mouse.get_pos()
             mouse_down(mouse)
+        
+        elif event.type == pygame.MOUSEMOTION:
+            mouse = pygame.mouse.get_pos()
+            mouse_moved(mouse)
+
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            mouse_up(start_mouse_pos, end_mouse_pos, game.START_MASS)
 
     end_time = perf_counter() # Get end time of the frame
     delta_time = end_time - start_time # delta_time is how long it takes for each frame to compute, this can then be used to make code frame rate independent
