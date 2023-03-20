@@ -43,8 +43,12 @@ def draw_screen(delta_time):
         global calculating_trajectory
         if calculating_trajectory:
             object = CelestialBody(Vector2D(start_mouse_pos[0], start_mouse_pos[1]), Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1]), game.START_MASS)
-            for i in range(1000):
-                object.position = iterate_pos(4 * delta_time, object)
+            game.TRAJECTORY_OBJECTS = copy.deepcopy(game.OBJECTS)
+            game.TRAJECTORY_OBJECTS.append(object)
+            for i in range(200):
+                object.position = iterate_pos(delta_time, object)
+                for o in game.TRAJECTORY_OBJECTS:
+                    o = iterate_pos(delta_time, o)
                 positions.append(copy.deepcopy(object.position))
             
             calculating_trajectory = False
@@ -60,21 +64,22 @@ def draw_screen(delta_time):
 def iterate_pos(delta_time, object: CelestialBody):
     accelerations = []
 
-    for o in game.OBJECTS:
-            
-        o: CelestialBody = o
-        distance = game.get_dist(o.position.x, o.position.y, object.position.x, object.position.y)
+    for o in game.TRAJECTORY_OBJECTS:
+        if o != object:
+                
+            o: CelestialBody = o
+            distance = game.get_dist(o.position.x, o.position.y, object.position.x, object.position.y)
 
-        force = game.G * (object.mass * o.mass / (distance)**2) # Only gets the magnitude of the force
+            force = game.G * (object.mass * o.mass / (distance)**2) # Only gets the magnitude of the force
 
-        # Gets direction from self to object
-        direction = (o.position.x - object.position.x, o.position.y - object.position.y)
-        direction_magnitude = (direction[0]**2 + direction[1]**2)**0.5
+            # Gets direction from self to object
+            direction = Vector2D(o.position.x - object.position.x, o.position.y - object.position.y)
+            direction_magnitude = (direction.x**2 + direction.y**2)**0.5
 
-        force_direction = Vector2D(direction[0] * (force / direction_magnitude), direction[1] * (force / direction_magnitude)) # Gives the force a direction with magnitude of the force magnitude calculated from newtons equation
+            force_direction = Vector2D(direction.x * (force / direction_magnitude), direction.y * (force / direction_magnitude)) # Gives the force a direction with magnitude of the force magnitude calculated from newtons equation
 
-        # a = F/ m
-        accelerations.append((force_direction.x / object.mass, force_direction.y / object.mass))
+            # a = F/ m
+            accelerations.append((force_direction.x / object.mass, force_direction.y / object.mass))
 
 
     x = 0
