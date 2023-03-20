@@ -4,6 +4,7 @@ import pygame
 import game
 import math
 from custom_maths import Vector2D
+import copy
 
 
 # Class for the objects
@@ -20,6 +21,8 @@ class CelestialBody():
         self.acceleration = Vector2D(0, 0) # Acceleration starts off as 0 in the x axis and 0 in the y axis
 
     def update(self, delta_time):
+        game.PARTICLES.append(Trail(copy.deepcopy(self.position)))
+
         self.attract() # Calls attract function every frame that this object is updated
         self.velocity = Vector2D(self.velocity.x + self.acceleration.x * delta_time, self.velocity.y + self.acceleration.y * delta_time) # calculates velocity based on acceleration
 
@@ -54,10 +57,10 @@ class CelestialBody():
                     force = game.G * (self.mass * object.mass / (distance)**2) # Only gets the magnitude of the force
 
                     # Gets direction from self to object
-                    direction = (object.position.x - self.position.x, object.position.y - self.position.y)
-                    direction_magnitude = (direction[0]**2 + direction[1]**2)**0.5
+                    direction = Vector2D(object.position.x - self.position.x, object.position.y - self.position.y)
+                    direction_magnitude = (direction.x**2 + direction.y**2)**0.5
 
-                    force_direction = (direction[0] * (force / direction_magnitude), direction[1] * (force / direction_magnitude)) # Gives the force a direction with magnitude of the force magnitude calculated from newtons equation
+                    force_direction = (direction.x * (force / direction_magnitude), direction.y * (force / direction_magnitude)) # Gives the force a direction with magnitude of the force magnitude calculated from newtons equation
 
                     # a = F/ m
                     accelerations.append((force_direction[0] / self.mass, force_direction[1] / self.mass))
@@ -83,3 +86,21 @@ class CelestialBody():
     def draw(self):
         # Draws circle
         pygame.draw.circle(game.WIN, (255, 0, 0), (self.position.x, self.position.y), self.radius)
+
+
+
+class Trail():
+    def __init__(self, position: Vector2D) -> None:
+        self.position: Vector2D = position
+        self.colour = 255
+        self.radius = 2
+
+    def update(self, delta_time):
+        self.colour -= delta_time * 100
+        self.colour = max(0, self.colour)
+        
+        if self.colour == 0:
+            game.PARTICLES.remove(self)
+
+    def draw(self):
+        pygame.draw.circle(game.WIN, (0, int(self.colour), 0), (self.position.x, self.position.y), self.radius)

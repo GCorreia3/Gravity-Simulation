@@ -11,6 +11,7 @@ pygame.init()
 # Main list of objects which you append new objects into. This is great since you are able to access this list form any file if you import game
 OBJECTS = []
 TRAJECTORY_OBJECTS = []
+PARTICLES = []
 
 # Gravitational constant
 G = 1000

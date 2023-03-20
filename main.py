@@ -29,6 +29,11 @@ def draw_screen(delta_time):
     global positions
     game.WIN.fill((0, 0, 0)) # fills screen with colour
 
+    for particle in game.PARTICLES:
+        if not paused:
+            particle.update(delta_time)
+        particle.draw()
+
     # Loops through objects which are in the game list
     for object in game.OBJECTS:
         if not paused:
@@ -46,9 +51,9 @@ def draw_screen(delta_time):
             game.TRAJECTORY_OBJECTS = copy.deepcopy(game.OBJECTS)
             game.TRAJECTORY_OBJECTS.append(object)
             for i in range(200):
-                object.position = iterate_pos(delta_time, object)
+                object.position = iterate_pos(2*delta_time, object)
                 for o in game.TRAJECTORY_OBJECTS:
-                    o = iterate_pos(delta_time, o)
+                    o = iterate_pos(2*delta_time, o)
                 positions.append(copy.deepcopy(object.position))
             
             calculating_trajectory = False
@@ -162,6 +167,7 @@ while running:
 
             if event.key == pygame.K_r:
                 game.OBJECTS.clear()
+                game.PARTICLES.clear()
 
         # Checks if the quit button in the top right is pressed on the window
         elif event.type == pygame.QUIT:
