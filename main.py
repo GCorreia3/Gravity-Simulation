@@ -42,6 +42,10 @@ def draw_screen(delta_time):
         # Runs the draw function of the object (draws the circle)
         object.draw()
 
+    if game.CENTRE_OF_MASS:
+        com = centre_of_mass(game.CENTRE_OF_MASS[0], game.CENTRE_OF_MASS[1], game.CENTRE_OF_MASS[2], game.CENTRE_OF_MASS[3])
+        pygame.draw.circle(game.WIN, (100, 100, 100), (com.x, com.y), 2)
+
     if is_pressed:
         pygame.draw.line(game.WIN, (0, 0, 255), start_mouse_pos, end_mouse_pos, 4)
         pygame.draw.circle(game.WIN, (255, 0, 0), start_mouse_pos, (game.START_MASS / math.pi)**0.5)
@@ -102,12 +106,27 @@ def iterate_pos(delta_time, object: CelestialBody):
     return object.position
 
 def spawn_binary(m1, m2, r):
-    v1 = (game.G*m1 / 3*r)**0.5
-    p1 = m1 * v1
-    v2 = -p1 / m2
+    x1 = (m2 * r) / (m1 + m2)
+    x2 = (m1 * r) / (m1 + m2)
 
-    game.OBJECTS.append(CelestialBody(Vector2D(0.5 * r + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v1*0.005), m1))
-    game.OBJECTS.append(CelestialBody(Vector2D(-0.5 * r + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v2*0.005), m2))
+    object1 = CelestialBody(Vector2D(-x1 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, 0), m1)
+    object2 = CelestialBody(Vector2D(x2 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, 0), m2)
+
+    v1 = math.sqrt((game.G * m1 * m2 * x1) / (m1 * r**2))
+    p1 = v1 * m1
+    p2 = -p1
+    v2 = p2 / m2
+
+    object1.velocity = Vector2D(0, v1)
+    object2.velocity = Vector2D(0, v2)
+
+    game.CENTRE_OF_MASS = (m1, m2, object1.position, object2.position)
+
+    game.OBJECTS.append(object1)
+    game.OBJECTS.append(object2)
+
+def centre_of_mass(m1, m2, pos1: Vector2D, pos2: Vector2D):
+    return (pos1*m1 + pos2*m2) / (m1 + m2)
 
 def mouse_down(mouse):
     x, y = mouse
@@ -176,9 +195,10 @@ while running:
             if event.key == pygame.K_r:
                 game.OBJECTS.clear()
                 game.PARTICLES.clear()
+                game.CENTRE_OF_MASS = None
 
             if event.key == pygame.K_b:
-                spawn_binary(100, 50, 100)
+                spawn_binary(1000, 1000, 300)
 
         # Checks if the quit button in the top right is pressed on the window
         elif event.type == pygame.QUIT:

@@ -96,7 +96,7 @@ class Trail():
         self.radius = 2
 
     def update(self, delta_time):
-        self.colour -= delta_time * 100
+        self.colour -= delta_time * 10
         self.colour = max(0, self.colour)
         
         if self.colour == 0:

@@ -13,6 +13,8 @@ OBJECTS = []
 TRAJECTORY_OBJECTS = []
 PARTICLES = []
 
+CENTRE_OF_MASS = None
+
 # Gravitational constant
 G = 1000
 
