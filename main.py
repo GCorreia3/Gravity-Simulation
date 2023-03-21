@@ -101,6 +101,14 @@ def iterate_pos(delta_time, object: CelestialBody):
 
     return object.position
 
+def spawn_binary(m1, m2, r):
+    v1 = (game.G*m1 / 3*r)**0.5
+    p1 = m1 * v1
+    v2 = -p1 / m2
+
+    game.OBJECTS.append(CelestialBody(Vector2D(0.5 * r + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v1*0.005), m1))
+    game.OBJECTS.append(CelestialBody(Vector2D(-0.5 * r + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v2*0.005), m2))
+
 def mouse_down(mouse):
     x, y = mouse
 
@@ -168,6 +176,9 @@ while running:
             if event.key == pygame.K_r:
                 game.OBJECTS.clear()
                 game.PARTICLES.clear()
+
+            if event.key == pygame.K_b:
+                spawn_binary(100, 50, 100)
 
         # Checks if the quit button in the top right is pressed on the window
         elif event.type == pygame.QUIT:
