@@ -66,11 +66,11 @@ def update_trajectory(delta_time, positions):
             object = CelestialBody(Vector2D(start_mouse_pos[0], start_mouse_pos[1]), Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1]), game.START_MASS)
             game.TRAJECTORY_OBJECTS = copy.deepcopy(game.OBJECTS)
             game.TRAJECTORY_OBJECTS.append(object)
-            for i in range(200):
-                object.position = iterate_pos(delta_time, object)
-                for o in game.TRAJECTORY_OBJECTS:
-                    o = iterate_pos(delta_time, o)
-                positions.append(copy.deepcopy(object.position))
+            for i in range(2000):
+                for i, o in enumerate(game.TRAJECTORY_OBJECTS):
+                    o.position = iterate_pos(delta_time, o)
+                    if i == len(game.TRAJECTORY_OBJECTS) - 1:
+                        positions.append(copy.deepcopy(o.position))
 
     else:
         positions.clear()
