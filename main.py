@@ -72,6 +72,14 @@ def update_trajectory(delta_time, positions):
                     if i == len(game.TRAJECTORY_OBJECTS) - 1:
                         positions.append(copy.deepcopy(o.position))
 
+                        if o.position.x > game.WIDTH or o.position.x < 0 or o.position.y > game.HEIGHT or o.position.y < 0:
+                            return positions
+                        
+                        for bobject in game.TRAJECTORY_OBJECTS:
+                            if bobject != o:
+                                if game.get_dist(o.position.x, o.position.y, bobject.position.x, bobject.position.y) < (o.radius + bobject.radius):
+                                    return positions
+
     else:
         positions.clear()
 
