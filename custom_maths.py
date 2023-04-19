@@ -45,6 +45,9 @@ class Vector2D():
             return Vector2D(self.x / arg.x, self.y / arg.y)
         else:
             return Vector2D(self.x / arg, self.y / arg)
+        
+    def __pow__(self, arg):
+        return Vector2D(self.x**arg, self.y**arg)
 
     def magnitude(self):
         return (self.x**2 + self.y**2)**0.5

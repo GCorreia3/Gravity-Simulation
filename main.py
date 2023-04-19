@@ -47,6 +47,9 @@ def draw_screen(positions):
         if i < len(positions) - 1:
             pygame.draw.line(game.WIN, (255, 255, 255), (pos.x, pos.y), (positions[i+1].x, positions[i+1].y), 2)
 
+    label = font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
+    game.WIN.blit(label, (0, 0))
+
     pygame.display.update() # This just updates the screen
 
 
@@ -148,6 +151,30 @@ def mouse_up(start_mouse_pos, end_mouse_pos, start_mass):
     initial_velocity = Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1])
 
     game.OBJECTS.append(CelestialBody(Vector2D(start_mouse_pos[0], start_mouse_pos[1]), initial_velocity, start_mass))
+
+
+average_fps_elapsed_time = 0
+average_fps = 0
+n_fps = 1
+showing_average_fps = 0
+def get_average_fps(delta_time):
+
+    global average_fps_elapsed_time, average_fps, n_fps, showing_average_fps
+    average_fps_elapsed_time += delta_time
+    if average_fps_elapsed_time > 0.2:
+
+        average_fps_elapsed_time = 0
+        showing_average_fps = average_fps
+        average_fps = 1 / delta_time
+        n_fps = 1
+
+    else:
+        average_fps = (1 / delta_time + n_fps * average_fps) / (n_fps + 1)
+        n_fps += 1
+
+    return showing_average_fps
+
+font = pygame.font.SysFont("bahnschrift", 20)
 
 
 def quit():

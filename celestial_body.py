@@ -11,7 +11,7 @@ import copy
 class CelestialBody():
     # Init function is run upon when the class is initialised
     def __init__(self, position: Vector2D, initial_velocity: Vector2D, mass): # When initialised these arguments are passed into the function
-        # self is this current object. A variable which is of self can access be accessed from inside or outside the class.
+        # self is this current object. A variable which is of self can be accessed from inside or outside the class.
         # EXAMPLE: if you call object.x (where object is just a random instance of this class) it would take the x value of the object.
         self.position: Vector2D = position
         self.mass = mass
@@ -37,7 +37,7 @@ class CelestialBody():
 
         # loops through all objects in the main object list
         for object in game.OBJECTS:
-            if object != self: # makes sure you will not attract yourself
+            if object != self: # makes sure you will not attract itself
                 object: CelestialBody = object
                 distance = game.get_dist(self.position.x, self.position.y, object.position.x, object.position.y) # Example of using functions from game
 
@@ -96,10 +96,10 @@ class Trail():
         self.radius = 2
 
     def update(self, delta_time):
-        self.colour -= delta_time * 10
+        self.colour -= delta_time * 100
         self.colour = max(0, self.colour)
         
-        if self.colour == 0:
+        if self.colour <= 0:
             game.PARTICLES.remove(self)
 
     def draw(self):
