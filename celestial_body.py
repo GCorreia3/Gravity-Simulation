@@ -18,19 +18,26 @@ class CelestialBody():
         self.radius = (self.mass / math.pi)**0.5 # Making radius related to mass (mass = area)
 
         self.velocity: Vector2D = initial_velocity
+        self.new_velocity: Vector2D = initial_velocity
         self.acceleration = Vector2D(0, 0) # Acceleration starts off as 0 in the x axis and 0 in the y axis
 
     def update(self, delta_time):
         game.PARTICLES.append(Trail(copy.deepcopy(self.position)))
 
-        self.attract() # Calls attract function every frame that this object is updated
-        self.velocity = Vector2D(self.velocity.x + self.acceleration.x * delta_time, self.velocity.y + self.acceleration.y * delta_time) # calculates velocity based on acceleration
+        intermediate_position = self.position + self.velocity * (delta_time / 2)
+
+        self.acceleration = self.get_acceleration(intermediate_position, self.velocity)
+
+        self.new_velocity = self.velocity + self.acceleration * delta_time
+
+        new_position = intermediate_position + self.new_velocity * (delta_time / 2)
 
         # Adds velocity to x and y position. Multiplied by delta_time to ensure that if the frame rates are different, the same amount of velocity will be added to the x and y per unit or real time
-        self.position.x += self.velocity.x * delta_time
-        self.position.y += self.velocity.y * delta_time
-    
-    def attract(self):
+        self.position = new_position
+
+        self.velocity = self.new_velocity
+
+    def get_acceleration(self, position: Vector2D, velocity: Vector2D) -> Vector2D:
         accelerations = [] # list of accelerations (each object causes the other to accelerate and so a list can be used to store all of the accelerations with every object)
         objects_to_remove = []
         object_to_add = []
@@ -39,13 +46,13 @@ class CelestialBody():
         for object in game.OBJECTS:
             if object != self: # makes sure you will not attract itself
                 object: CelestialBody = object
-                distance = game.get_dist(self.position.x, self.position.y, object.position.x, object.position.y) # Example of using functions from game
+                distance = game.get_dist(position.x, position.y, object.position.x, object.position.y) # Example of using functions from game
 
                 # Calculates if the object and self are colliding
                 if distance < self.radius:
                     combined_mass = self.mass + object.mass
                     # Adds new celestial body to list with new initial states of the combination of the two previous states
-                    object_to_add.append(CelestialBody(Vector2D(self.position.x, self.position.y), Vector2D((self.mass*self.velocity.x + object.mass*object.velocity.x) / combined_mass, (self.mass*self.velocity.y + object.mass*object.velocity.y) / combined_mass), combined_mass))
+                    object_to_add.append(CelestialBody(Vector2D(position.x, position.y), Vector2D((self.mass*velocity.x + object.mass*object.velocity.x) / combined_mass, (self.mass*velocity.y + object.mass*object.velocity.y) / combined_mass), combined_mass))
 
                     # Adds the two colliding celestial bodies to a list to then be removed later
                     objects_to_remove.append(self)
@@ -57,7 +64,7 @@ class CelestialBody():
                     force = game.G * (self.mass * object.mass / (distance)**2) # Only gets the magnitude of the force
 
                     # Gets direction from self to object
-                    direction = Vector2D(object.position.x - self.position.x, object.position.y - self.position.y)
+                    direction = Vector2D(object.position.x - position.x, object.position.y - position.y)
                     direction_magnitude = (direction.x**2 + direction.y**2)**0.5
 
                     force_direction = (direction.x * (force / direction_magnitude), direction.y * (force / direction_magnitude)) # Gives the force a direction with magnitude of the force magnitude calculated from newtons equation
@@ -81,7 +88,7 @@ class CelestialBody():
             x += accelerations[i][0]
             y += accelerations[i][1]
 
-        self.acceleration = Vector2D(x, y) # Sets the main acceleration variable to the sum
+        return Vector2D(x, y) # Sets the main acceleration variable to the sum
 
     def draw(self):
         # Draws circle
@@ -96,7 +103,7 @@ class Trail():
         self.radius = 2
 
     def update(self, delta_time):
-        self.colour -= delta_time * 100
+        self.colour -= delta_time * 10
         self.colour = max(0, self.colour)
         
         if self.colour <= 0:
