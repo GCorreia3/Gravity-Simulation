@@ -21,8 +21,13 @@ class CelestialBody():
         self.new_velocity: Vector2D = initial_velocity
         self.acceleration = Vector2D(0, 0) # Acceleration starts off as 0 in the x axis and 0 in the y axis
 
+        self.dist_between_spawns = 5
+        self.last_spawn_pos: Vector2D = position + self.dist_between_spawns
+
     def update(self, delta_time):
-        game.PARTICLES.append(Trail(copy.deepcopy(self.position)))
+        if game.get_dist(self.position.x, self.position.y, self.last_spawn_pos.x, self.last_spawn_pos.y) >= self.dist_between_spawns:
+            game.PARTICLES.append(Trail(copy.deepcopy(self.position)))
+            self.last_spawn_pos = self.position
 
         intermediate_position = self.position + self.velocity * (delta_time / 2)
 

@@ -92,16 +92,18 @@ def update_trajectory(delta_time, positions):
 def iterate_pos(delta_time, object: CelestialBody):
     accelerations = []
 
+    intermediate_position = object.position + object.velocity * (delta_time / 2)
+
     for o in game.TRAJECTORY_OBJECTS:
         if o != object:
                 
             o: CelestialBody = o
-            distance = game.get_dist(o.position.x, o.position.y, object.position.x, object.position.y)
+            distance = game.get_dist(o.position.x, o.position.y, intermediate_position.x, intermediate_position.y)
 
             force = game.G * (object.mass * o.mass / (distance)**2) # Only gets the magnitude of the force
 
             # Gets direction from self to object
-            direction = Vector2D(o.position.x - object.position.x, o.position.y - object.position.y)
+            direction = Vector2D(o.position.x - intermediate_position.x, o.position.y - intermediate_position.y)
             direction_magnitude = (direction.x**2 + direction.y**2)**0.5
 
             force_direction = Vector2D(direction.x * (force / direction_magnitude), direction.y * (force / direction_magnitude)) # Gives the force a direction with magnitude of the force magnitude calculated from newtons equation
@@ -117,9 +119,9 @@ def iterate_pos(delta_time, object: CelestialBody):
 
     object.acceleration = Vector2D(x, y)
 
-    object.velocity = Vector2D(object.velocity.x + object.acceleration.x * delta_time, object.velocity.y + object.acceleration.y * delta_time)
+    object.velocity = object.velocity + object.acceleration * delta_time
 
-    object.position += object.velocity * delta_time
+    object.position = intermediate_position + object.velocity * (delta_time / 2)
 
     return object.position
 
