@@ -1,3 +1,5 @@
+import math
+
 class Vector2D():
     def __init__(self, x, y) -> None:
         self.x = x
@@ -51,3 +53,30 @@ class Vector2D():
 
     def magnitude(self):
         return (self.x**2 + self.y**2)**0.5
+    
+    def normalise(self):
+        magnitude = self.magnitude()
+
+        self.x = self.x / magnitude
+        self.y = self.y / magnitude
+
+        return self
+    
+    def return_normalised(self):
+        magnitude = self.magnitude()
+
+        if magnitude > 0:
+            x = self.x / magnitude
+            y = self.y / magnitude
+        else:
+            x = self.x
+            y = self.y
+
+        return Vector2D(x, y)
+    
+    def rotate(self, angle):
+        """Returns clockwise rotated vector by an angle in radians"""
+
+        current_angle = math.atan2(self.y, self.x)
+
+        return Vector2D(self.magnitude() * math.cos(current_angle + angle), self.magnitude() * math.sin(current_angle + angle))

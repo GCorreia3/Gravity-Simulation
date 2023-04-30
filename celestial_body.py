@@ -4,6 +4,7 @@ import pygame
 import game
 import math
 from custom_maths import Vector2D
+from arrows import VectorArrow
 import copy
 
 
@@ -24,7 +25,15 @@ class CelestialBody():
         self.dist_between_spawns = 5
         self.last_spawn_pos: Vector2D = position + self.dist_between_spawns
 
+        self.velocity_arrow = VectorArrow(self.position, self.velocity.return_normalised(), self.velocity.magnitude() / 2, 2, (0, 0, 255))
+
+        self.force_arrow = VectorArrow(self.position, self.acceleration.return_normalised(), self.acceleration.magnitude() / 2, 2, (100, 100, 255))
+
     def update(self, delta_time):
+
+        self.velocity_arrow.update(self.position, self.velocity.return_normalised(), self.velocity.magnitude() / 2)
+        self.force_arrow.update(self.position, self.acceleration.return_normalised(), self.acceleration.magnitude() / 2)
+
         if game.get_dist(self.position.x, self.position.y, self.last_spawn_pos.x, self.last_spawn_pos.y) >= self.dist_between_spawns:
             game.PARTICLES.append(Trail(copy.deepcopy(self.position)))
             self.last_spawn_pos = self.position
@@ -84,7 +93,8 @@ class CelestialBody():
             game.OBJECTS.append(object)
 
         for object in objects_to_remove:
-            game.OBJECTS.remove(object)
+            if object in game.OBJECTS:
+                game.OBJECTS.remove(object)
         
         # Quick code to add up the x and y's of all of the accelerations calculated with every other object
         x = 0
@@ -96,6 +106,12 @@ class CelestialBody():
         return Vector2D(x, y) # Sets the main acceleration variable to the sum
 
     def draw(self):
+        # Draw velocity arrow
+        self.velocity_arrow.draw()
+
+        # Draw force arrow
+        self.force_arrow.draw()
+
         # Draws circle
         pygame.draw.circle(game.WIN, (255, 0, 0), (self.position.x, self.position.y), self.radius)
 

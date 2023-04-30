@@ -8,6 +8,7 @@ from celestial_body import CelestialBody
 from custom_maths import Vector2D
 from time import perf_counter
 import math
+import random
 import copy
 
 pygame.init() # Initialises pygame (only needs to be done once)
@@ -225,6 +226,10 @@ while running:
 
             if event.key == pygame.K_b:
                 spawn_binary(1000, 1000, 300)
+
+            if event.key == pygame.K_n:
+                for i in range (50):
+                    game.OBJECTS.append(CelestialBody(Vector2D(random.randint(0, game.WIDTH), random.randint(0, game.HEIGHT)), Vector2D(random.randint(-100, 100), random.randint(-100, 100)), random.randint(50, 100)))
 
         # Checks if the quit button in the top right is pressed on the window
         elif event.type == pygame.QUIT:
