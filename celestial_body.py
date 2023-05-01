@@ -22,12 +22,14 @@ class CelestialBody():
         self.new_velocity: Vector2D = initial_velocity
         self.acceleration = Vector2D(0, 0) # Acceleration starts off as 0 in the x axis and 0 in the y axis
 
-        self.dist_between_spawns = 5
+        self.dist_between_spawns = 1
         self.last_spawn_pos: Vector2D = position + self.dist_between_spawns
 
         self.velocity_arrow = VectorArrow(self.position, self.velocity.return_normalised(), self.velocity.magnitude() / 2, 2, (0, 0, 255))
 
         self.force_arrow = VectorArrow(self.position, self.acceleration.return_normalised(), self.acceleration.magnitude() / 2, 2, (100, 100, 255))
+
+        self.colliding = False
 
     def update(self, delta_time):
 
@@ -64,13 +66,16 @@ class CelestialBody():
 
                 # Calculates if the object and self are colliding
                 if distance < self.radius:
-                    combined_mass = self.mass + object.mass
-                    # Adds new celestial body to list with new initial states of the combination of the two previous states
-                    object_to_add.append(CelestialBody(Vector2D(position.x, position.y), Vector2D((self.mass*velocity.x + object.mass*object.velocity.x) / combined_mass, (self.mass*velocity.y + object.mass*object.velocity.y) / combined_mass), combined_mass))
+                    # If colliding is true, then skip this frame and wait until next frame to collide with the newly formed object (fixes collision in same frame)
+                    if self.colliding == False:
+                        combined_mass = self.mass + object.mass
+                        # Adds new celestial body to list with new initial states of the combination of the two previous states
+                        object_to_add.append(CelestialBody(Vector2D(position.x, position.y), Vector2D((self.mass*velocity.x + object.mass*object.velocity.x) / combined_mass, (self.mass*velocity.y + object.mass*object.velocity.y) / combined_mass), combined_mass))
 
-                    # Adds the two colliding celestial bodies to a list to then be removed later
-                    objects_to_remove.append(self)
-                    objects_to_remove.append(object)
+                        # Adds the two colliding celestial bodies to a list to then be removed later
+                        objects_to_remove.append(self)
+                        objects_to_remove.append(object)
+                        self.colliding = True
                 else:
                     # Run if the objects are not colliding e.i. they are attracting each other
 
@@ -121,10 +126,10 @@ class Trail():
     def __init__(self, position: Vector2D) -> None:
         self.position: Vector2D = position
         self.colour = 255
-        self.radius = 2
+        self.radius = 1
 
     def update(self, delta_time):
-        self.colour -= delta_time * 10
+        self.colour -= delta_time * 50
         self.colour = max(0, self.colour)
         
         if self.colour <= 0:
