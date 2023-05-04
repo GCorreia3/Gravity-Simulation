@@ -20,6 +20,11 @@ G = 1000
 
 START_MASS = 100
 
+
+fps_font = pygame.font.SysFont("bahnschrift", 20)
+title_font = pygame.font.SysFont("Calibri", 40)
+text_font = pygame.font.SysFont("Calibri", 20)
+
 # Function to use across files
 def get_dist(x1, y1, x2, y2):
     return ((x2 - x1)**2 + (y2 - y1)**2)**0.5

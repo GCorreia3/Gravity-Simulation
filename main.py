@@ -6,6 +6,7 @@ import sys
 import game
 from celestial_body import CelestialBody
 from custom_maths import Vector2D
+from ui import SpawnBinaryInterface
 from time import perf_counter
 import math
 import random
@@ -24,6 +25,8 @@ is_pressed = False
 calculating_trajectory = False
 
 positions = list()
+
+spawnBinaryInterface = SpawnBinaryInterface((game.WIDTH/2, game.HEIGHT/2), game.WIDTH - 200, game.HEIGHT - 200)
 
 # Function which is called every frame to draw the objects
 def draw_screen(positions):
@@ -48,8 +51,10 @@ def draw_screen(positions):
         if i < len(positions) - 1:
             pygame.draw.line(game.WIN, (255, 255, 255), (pos.x, pos.y), (positions[i+1].x, positions[i+1].y), 2)
 
-    label = font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
+    label = game.fps_font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
     game.WIN.blit(label, (0, 0))
+
+    spawnBinaryInterface.draw()
 
     pygame.display.update() # This just updates the screen
 
@@ -178,8 +183,6 @@ def get_average_fps(delta_time):
 
     return showing_average_fps
 
-font = pygame.font.SysFont("bahnschrift", 20)
-
 
 def quit():
     # closes pygame and quits the application
@@ -230,6 +233,9 @@ while running:
             if event.key == pygame.K_n:
                 for i in range (50):
                     game.OBJECTS.append(CelestialBody(Vector2D(random.randint(0, game.WIDTH), random.randint(0, game.HEIGHT)), Vector2D(random.randint(-100, 100), random.randint(-100, 100)), random.randint(50, 100)))
+            
+            if event.key == pygame.K_s:
+                spawnBinaryInterface.open = not spawnBinaryInterface.open
 
         # Checks if the quit button in the top right is pressed on the window
         elif event.type == pygame.QUIT:
