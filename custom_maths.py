@@ -74,6 +74,9 @@ class Vector2D():
 
         return Vector2D(x, y)
     
+    def to_coordinate(self):
+        return (self.x, self.y)
+    
     def rotate(self, angle):
         """Returns clockwise rotated vector by an angle in radians"""
 

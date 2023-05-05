@@ -1,7 +1,5 @@
 To do list:
 
-Spawn binary interface - allows you to modify values during runtime
-
 Equation for binary with eliptical orbits
 
 Change values for more real world data
@@ -20,3 +18,5 @@ Finished:
 
 Vector arrow class
 Vector arrows for force and velocity
+
+Spawn binary interface - allows you to modify values during runtime

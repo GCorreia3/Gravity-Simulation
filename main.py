@@ -26,7 +26,7 @@ calculating_trajectory = False
 
 positions = list()
 
-spawnBinaryInterface = SpawnBinaryInterface((game.WIDTH/2, game.HEIGHT/2), game.WIDTH - 200, game.HEIGHT - 200)
+spawnBinaryInterface = SpawnBinaryInterface(Vector2D(game.WIDTH/2, game.HEIGHT/2), game.WIDTH - 200, game.HEIGHT - 200)
 
 # Function which is called every frame to draw the objects
 def draw_screen(positions):
@@ -199,6 +199,9 @@ while running:
     update_objects(delta_time)
     positions = update_trajectory(delta_time, positions)
 
+    if spawnBinaryInterface.open:
+        spawnBinaryInterface.update()
+
     calculating_trajectory = False
 
     draw_screen(positions)
@@ -208,6 +211,14 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 quit()
+
+            if event.key == pygame.K_s:
+                if not spawnBinaryInterface.open:
+                    paused = True
+                spawnBinaryInterface.open = not spawnBinaryInterface.open
+
+            if spawnBinaryInterface.open: continue
+
             if event.key == pygame.K_SPACE:
                 paused = not paused
 
@@ -234,26 +245,34 @@ while running:
                 for i in range (50):
                     game.OBJECTS.append(CelestialBody(Vector2D(random.randint(0, game.WIDTH), random.randint(0, game.HEIGHT)), Vector2D(random.randint(-100, 100), random.randint(-100, 100)), random.randint(50, 100)))
             
-            if event.key == pygame.K_s:
-                spawnBinaryInterface.open = not spawnBinaryInterface.open
 
         # Checks if the quit button in the top right is pressed on the window
         elif event.type == pygame.QUIT:
             quit()
 
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            start_mouse_pos = pygame.mouse.get_pos()
-            is_pressed = True
-            calculating_trajectory = True
+            if not spawnBinaryInterface.open:
+                start_mouse_pos = pygame.mouse.get_pos()
+                is_pressed = True
+                calculating_trajectory = True
+            else:
+                spawnBinaryInterface.check_click(pygame.mouse.get_pos())
         
         elif event.type == pygame.MOUSEMOTION:
-            end_mouse_pos = pygame.mouse.get_pos()
-            positions.clear()
-            calculating_trajectory = True
+            if not spawnBinaryInterface.open:
+                end_mouse_pos = pygame.mouse.get_pos()
+                positions.clear()
+                calculating_trajectory = True
+            else:
+                spawnBinaryInterface.check_dragging(pygame.mouse.get_pos())
 
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            mouse_up(start_mouse_pos, end_mouse_pos, game.START_MASS)
-            is_pressed = False
+            if not spawnBinaryInterface.open:
+                if is_pressed:
+                    mouse_up(start_mouse_pos, end_mouse_pos, game.START_MASS)
+                is_pressed = False
+            else:
+                spawnBinaryInterface.release_drag()
 
     end_time = perf_counter() # Get end time of the frame
     delta_time = end_time - start_time # delta_time is how long it takes for each frame to compute, this can then be used to make code frame rate independent
