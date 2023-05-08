@@ -54,6 +54,15 @@ class Vector2D():
     def magnitude(self):
         return (self.x**2 + self.y**2)**0.5
     
+    def set_magnitude(self, target_magnitude):
+        if self.magnitude() == 0: return self
+        magnitude_ratio = target_magnitude / self.magnitude()
+
+        self.x = self.x * magnitude_ratio
+        self.y = self.y * magnitude_ratio
+
+        return self
+    
     def normalise(self):
         magnitude = self.magnitude()
 

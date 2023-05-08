@@ -31,6 +31,8 @@ class CelestialBody():
 
         self.colliding = False
 
+        self.energy = 0
+
     def update(self, delta_time):
 
         self.velocity_arrow.update(self.position, self.velocity.return_normalised(), self.velocity.magnitude() / 2)
@@ -39,6 +41,20 @@ class CelestialBody():
         if game.get_dist(self.position.x, self.position.y, self.last_spawn_pos.x, self.last_spawn_pos.y) >= self.dist_between_spawns:
             game.PARTICLES.append(Trail(copy.deepcopy(self.position)))
             self.last_spawn_pos = self.position
+
+        if len(game.OBJECTS) == 2:
+            for object in game.OBJECTS:
+                if object != self:
+
+                    distance = game.get_dist(self.position.x, self.position.y, object.position.x, object.position.y)
+
+                    self.energy = (0.5 * self.mass * self.velocity.magnitude()**2) - ((game.G * self.mass * object.mass) / distance)
+                    
+                    self.energy -= 100000 * delta_time
+
+                    vel = ((self.energy + ((game.G * self.mass * object.mass) / distance)) * 2 / self.mass)**0.5
+
+                    self.velocity.set_magnitude(vel)
 
         intermediate_position = self.position + self.velocity * (delta_time / 2)
 
@@ -129,7 +145,7 @@ class Trail():
         self.radius = 1
 
     def update(self, delta_time):
-        self.colour -= delta_time * 50
+        #self.colour -= delta_time * 5
         self.colour = max(0, self.colour)
         
         if self.colour <= 0:
