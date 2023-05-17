@@ -1,6 +1,6 @@
 import pygame
 import game
-from celestial_body import CelestialBody
+from celestial_body import CelestialBody, BinaryObject
 from custom_maths import Vector2D
 import math
 
@@ -62,8 +62,8 @@ class SpawnBinaryInterface():
         p2 = -p1
         v2 = p2 / m2
 
-        object1 = CelestialBody(Vector2D(-x1 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v1), m1)
-        object2 = CelestialBody(Vector2D(x2 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v2), m2)
+        object1 = BinaryObject(Vector2D(-x1 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v1), m1)
+        object2 = BinaryObject(Vector2D(x2 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v2), m2)
 
         game.CENTRE_OF_MASS = (m1, m2, object1.position, object2.position)
 
@@ -91,6 +91,7 @@ class SpawnBinaryInterface():
 
         # Draw spawn button
         self.spawn_button.draw()
+
 
 
 class Slider():
@@ -172,3 +173,145 @@ class Button():
         # Draw button text
         text_surface = game.text_font.render(self.text, True, (255, 255, 255))
         game.WIN.blit(text_surface, (self.position.x - text_surface.get_width()/2, self.position.y - text_surface.get_height()/2))
+
+
+
+class Graph():
+    def __init__(self, position: Vector2D, width, height, colour, x_start, x_end, y_start, y_end, x_axis_title, y_axis_title) -> None:
+        self.position: Vector2D = position
+        self.width = width
+        self.height = height
+        self.colour = colour
+
+        self.x_start = x_start
+        self.x_end = x_end
+        self.y_start = y_start
+        self.y_end = y_end
+
+        self.x_range = x_end - x_start
+        self.y_range = y_end - y_start
+
+        self.axis_offset = 25
+
+        self.start_y_coords = Vector2D(self.position.x - self.width/2 + self.axis_offset, self.position.y + self.height/2 - self.axis_offset)
+        self.end_y_coords = Vector2D(self.position.x - self.width/2 + self.axis_offset, self.position.y - self.height/2 + self.axis_offset)
+
+        self.start_x_coords = Vector2D(self.position.x - self.width/2 + self.axis_offset, self.position.y + self.height/2 - self.axis_offset)
+        self.end_x_coords = Vector2D(self.position.x + self.width/2 - self.axis_offset, self.position.y + self.height/2 - self.axis_offset)
+
+        self.x_coord_range = self.end_x_coords.x - self.start_x_coords.x
+        self.y_coord_range = self.end_y_coords.y - self.start_y_coords.y
+
+        self.points = []
+
+        self.text_offset = 5
+
+        self.x_axis_title = x_axis_title
+        self.y_axis_title = y_axis_title
+
+        self.x_axis_grid_separation = 1
+        self.y_axis_grid_separation = 0.005
+
+        self.graph_timer = 0
+        self.graph_time = 0.1
+        self.graph_total_time = 0
+
+    def point_to_position(self, point: Vector2D):
+
+        x_proportion = point.x / self.x_range
+        new_x = x_proportion * self.x_coord_range
+
+        y_proportion = point.y / self.y_range
+        new_y = y_proportion * self.y_coord_range
+
+        return Vector2D(self.start_x_coords.x + new_x, self.start_y_coords.y + new_y)
+    
+    def add_point(self, point):
+        self.points.append(point)
+
+    def draw_axis_info(self):
+        # Draw x-axis labels
+        axis_x_start = game.text_font.render(f"{self.x_start}", True, (255, 255, 255))
+        game.WIN.blit(axis_x_start, (self.start_x_coords.x - axis_x_start.get_width()/2, self.start_x_coords.y + self.text_offset))
+
+        axis_x_end = game.text_font.render(f"{round(self.x_end, 2)}", True, (255, 255, 255))
+        game.WIN.blit(axis_x_end, (self.end_x_coords.x - axis_x_end.get_width()/2, self.end_x_coords.y + self.text_offset))
+
+        # Draw y-axis labels
+        axis_y_start = game.text_font.render(f"{self.y_start}", True, (255, 255, 255))
+        game.WIN.blit(axis_y_start, (self.start_y_coords.x - axis_y_start.get_width() - self.text_offset, self.start_y_coords.y - axis_y_start.get_height()/2))
+
+        axis_y_end = game.text_font.render(f"{round(self.y_end, 2)}", True, (255, 255, 255))
+        game.WIN.blit(axis_y_end, (self.end_y_coords.x - axis_y_end.get_width() - self.text_offset, self.end_y_coords.y))
+
+        # Draw x-axis Title
+        axis_x_title = game.text_font.render(self.x_axis_title, True, (255, 255, 255))
+        game.WIN.blit(axis_x_title, (self.position.x - axis_x_title.get_width()/2, self.start_x_coords.y + self.text_offset))
+
+        # Draw y-axis Title
+        axis_y_title = game.text_font.render(self.y_axis_title, True, (255, 255, 255))
+        axis_y_title = pygame.transform.rotate(axis_y_title, 90)
+        game.WIN.blit(axis_y_title, (self.start_y_coords.x - axis_y_title.get_width()/2 - self.text_offset - 5, self.position.y - axis_y_title.get_height()/2))
+
+    def update(self, delta_time, x_input):
+        if self.graph_timer < self.graph_time:
+            self.graph_timer += delta_time
+            self.graph_total_time += delta_time
+        else:
+            self.add_point(Vector2D(self.graph_total_time, x_input))
+            self.graph_timer = 0
+
+        self.x_end = max(self.x_end, self.graph_total_time)
+        self.x_range = self.x_end - self.x_start
+
+        self.y_end = max(self.y_end, x_input)
+        self.y_range = self.y_end - self.y_start
+
+    def draw(self):
+        # Draws background
+        pygame.draw.rect(game.WIN, self.colour, (self.position.x - self.width/2, self.position.y - self.height/2, self.width, self.height))
+
+        # X-axis
+        pygame.draw.line(game.WIN, (255, 255, 255), self.start_x_coords.to_coordinate(), self.end_x_coords.to_coordinate())
+
+        # Y-axis
+        pygame.draw.line(game.WIN, (255, 255, 255), self.start_y_coords.to_coordinate(), self.end_y_coords.to_coordinate())
+
+
+        # Draw grid
+        num_x_lines = self.x_range / self.x_axis_grid_separation
+        if num_x_lines > 20:
+            self.x_axis_grid_separation *= 2
+            num_x_lines = self.x_range / self.x_axis_grid_separation
+
+        num_y_lines = self.y_range / self.y_axis_grid_separation
+        if num_y_lines > 10:
+            self.y_axis_grid_separation *= 2
+            num_y_lines = self.y_range / self.y_axis_grid_separation
+        
+        for x in range(int(num_x_lines)):
+            pygame.draw.line(game.WIN, (100, 100, 100), (self.start_y_coords.x + (x+1)/(self.x_range / self.x_axis_grid_separation) * self.x_coord_range, self.start_y_coords.y), (self.end_y_coords.x + (x+1)/(self.x_range / self.x_axis_grid_separation) * self.x_coord_range, self.end_y_coords.y))
+        
+        for y in range(int(self.y_range / self.y_axis_grid_separation)):
+            pygame.draw.line(game.WIN, (100, 100, 100), (self.start_x_coords.x, self.start_x_coords.y + (y+1)/(self.y_range / self.y_axis_grid_separation) * self.y_coord_range), (self.end_x_coords.x, self.end_x_coords.y + (y+1)/(self.y_range / self.y_axis_grid_separation) * self.y_coord_range))
+        
+
+        # Draws points
+        if len(self.points) > 1:
+
+            # Remove close points to improve performance
+            if self.point_to_position(self.points[len(self.points)-1]).get_distance(self.point_to_position(self.points[len(self.points)-2])) < 1:
+                self.points.remove(self.points[len(self.points)-1])
+
+            for i in range(len(self.points) - 1):
+                pygame.draw.line(game.WIN, (100, 100, 255), self.point_to_position(self.points[i]).to_coordinate(), self.point_to_position(self.points[i+1]).to_coordinate(), 2)
+
+            # Draws info on last point
+            info_text = game.text_font.render(f"{round(self.points[len(self.points)-1].y, 2)}", True, (255, 255, 255))
+            game.WIN.blit(info_text, (self.point_to_position(self.points[len(self.points)-1]).x + info_text.get_width()/2, self.point_to_position(self.points[len(self.points)-1]).y - info_text.get_height()/2))
+        
+        #for point in self.points:
+            #pygame.draw.circle(WIN, (255, 255, 255), self.point_to_position(point), 5)
+
+        # Draws axis
+        self.draw_axis_info()

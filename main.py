@@ -4,9 +4,9 @@
 import pygame
 import sys
 import game
-from celestial_body import CelestialBody
+from celestial_body import CelestialBody, BinaryObject
 from custom_maths import Vector2D
-from ui import SpawnBinaryInterface
+from ui import SpawnBinaryInterface, Graph
 from time import perf_counter
 import math
 import random
@@ -16,6 +16,8 @@ pygame.init() # Initialises pygame (only needs to be done once)
 
 running = True
 paused = True
+
+draw_graph = False
 
 start_mouse_pos = (0, 0)
 end_mouse_pos = (0, 0)
@@ -27,6 +29,7 @@ calculating_trajectory = False
 positions = list()
 
 spawnBinaryInterface = SpawnBinaryInterface(Vector2D(game.WIDTH/2, game.HEIGHT/2), game.WIDTH - 200, game.HEIGHT - 200)
+graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=30, y_start=0, y_end=0.01, x_axis_title="Time/s", y_axis_title="Velocity")
 
 # Function which is called every frame to draw the objects
 def draw_screen(positions):
@@ -53,6 +56,9 @@ def draw_screen(positions):
 
     label = game.fps_font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
     game.WIN.blit(label, (0, 0))
+
+    if draw_graph:
+        graph.draw()
 
     spawnBinaryInterface.draw()
 
@@ -132,25 +138,6 @@ def iterate_pos(delta_time, object: CelestialBody):
     return object.position
 
 
-def spawn_binary(m1, m2, r):
-    x1 = (m2 * r) / (m1 + m2)
-    x2 = (m1 * r) / (m1 + m2)
-
-    v1 = math.sqrt((game.G * m1 * m2 * x1) / (m1 * r**2))
-    #v1 = 25
-    p1 = v1 * m1
-    p2 = -p1
-    v2 = p2 / m2
-
-    object1 = CelestialBody(Vector2D(-x1 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v1), m1)
-    object2 = CelestialBody(Vector2D(x2 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v2), m2)
-
-    game.CENTRE_OF_MASS = (m1, m2, object1.position, object2.position)
-
-    game.OBJECTS.append(object1)
-    game.OBJECTS.append(object2)
-
-
 def centre_of_mass(m1, m2, pos1: Vector2D, pos2: Vector2D):
     return (pos1*m1 + pos2*m2) / (m1 + m2)
 
@@ -204,6 +191,17 @@ while running:
 
     calculating_trajectory = False
 
+    binary = []
+
+    for object in game.OBJECTS:
+        if isinstance(object, BinaryObject):
+            binary.append(object)
+
+    if draw_graph:
+        if len(binary) == 2:
+            #graph.update(delta_time, game.dist_to(binary[0].position.to_coordinate(), binary[1].position.to_coordinate()))
+            graph.update(delta_time, binary[0].velocity.magnitude())
+
     draw_screen(positions)
 
     # Loops through all of the events (there are many many types of events) that occur in this frame
@@ -238,8 +236,8 @@ while running:
                 game.PARTICLES.clear()
                 game.CENTRE_OF_MASS = None
 
-            if event.key == pygame.K_b:
-                spawn_binary(1000, 1000, 300)
+            if event.key == pygame.K_g:
+                draw_graph = not draw_graph
 
             if event.key == pygame.K_n:
                 for i in range (50):

@@ -86,6 +86,9 @@ class Vector2D():
     def to_coordinate(self):
         return (self.x, self.y)
     
+    def get_distance(self, vector):
+        return ((vector.x - self.x)**2 + (vector.y - self.y)**2)**0.5
+    
     def rotate(self, angle):
         """Returns clockwise rotated vector by an angle in radians"""
 

@@ -28,3 +28,6 @@ text_font = pygame.font.SysFont("Calibri", 20)
 # Function to use across files
 def get_dist(x1, y1, x2, y2):
     return ((x2 - x1)**2 + (y2 - y1)**2)**0.5
+
+def dist_to(pos1, pos2):
+    return ((pos2[0] - pos1[0])**2 + (pos2[1] - pos1[1])**2)**0.5

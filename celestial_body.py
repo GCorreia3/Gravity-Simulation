@@ -31,8 +31,6 @@ class CelestialBody():
 
         self.colliding = False
 
-        self.energy = 0
-
     def update(self, delta_time):
 
         self.velocity_arrow.update(self.position, self.velocity.return_normalised(), self.velocity.magnitude() / 2)
@@ -41,20 +39,6 @@ class CelestialBody():
         if game.get_dist(self.position.x, self.position.y, self.last_spawn_pos.x, self.last_spawn_pos.y) >= self.dist_between_spawns:
             game.PARTICLES.append(Trail(copy.deepcopy(self.position)))
             self.last_spawn_pos = self.position
-
-        if len(game.OBJECTS) == 2:
-            for object in game.OBJECTS:
-                if object != self:
-
-                    distance = game.get_dist(self.position.x, self.position.y, object.position.x, object.position.y)
-
-                    self.energy = (0.5 * self.mass * self.velocity.magnitude()**2) - ((game.G * self.mass * object.mass) / distance)
-                    
-                    self.energy -= 100000 * delta_time
-
-                    vel = ((self.energy + ((game.G * self.mass * object.mass) / distance)) * 2 / self.mass)**0.5
-
-                    self.velocity.set_magnitude(vel)
 
         intermediate_position = self.position + self.velocity * (delta_time / 2)
 
@@ -138,6 +122,32 @@ class CelestialBody():
 
 
 
+class BinaryObject(CelestialBody):
+    def __init__(self, position: Vector2D, initial_velocity: Vector2D, mass):
+        super().__init__(position, initial_velocity, mass)
+
+        self.energy = 0
+
+    def update(self, delta_time):
+        
+        if len(game.OBJECTS) == 2:
+            for object in game.OBJECTS:
+                if object != self:
+
+                    distance = game.get_dist(self.position.x, self.position.y, object.position.x, object.position.y)
+
+                    self.energy = (0.5 * self.mass * self.velocity.magnitude()**2) - ((game.G * self.mass * object.mass) / distance)
+                    
+                    self.energy -= (1 / distance) * self.mass * self.acceleration.magnitude() * 100 * delta_time
+
+                    vel = ((self.energy + ((game.G * self.mass * object.mass) / distance)) * 2 / self.mass)**0.5
+
+                    self.velocity.set_magnitude(vel)
+
+        super().update(delta_time)
+
+
+
 class Trail():
     def __init__(self, position: Vector2D) -> None:
         self.position: Vector2D = position
@@ -145,7 +155,7 @@ class Trail():
         self.radius = 1
 
     def update(self, delta_time):
-        #self.colour -= delta_time * 5
+        self.colour -= delta_time * 5
         self.colour = max(0, self.colour)
         
         if self.colour <= 0:
