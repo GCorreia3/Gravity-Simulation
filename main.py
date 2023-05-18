@@ -29,7 +29,7 @@ calculating_trajectory = False
 positions = list()
 
 spawnBinaryInterface = SpawnBinaryInterface(Vector2D(game.WIDTH/2, game.HEIGHT/2), game.WIDTH - 200, game.HEIGHT - 200)
-graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=30, y_start=0, y_end=0.01, x_axis_title="Time/s", y_axis_title="Velocity")
+graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=10, y_start=0, y_end=20, y_start2=0, y_end2=20, x_axis_title="Time/s", y_axis_title="Velocity", y_axis_title2="Separation")
 
 # Function which is called every frame to draw the objects
 def draw_screen(positions):
@@ -199,8 +199,7 @@ while running:
 
     if draw_graph:
         if len(binary) == 2:
-            #graph.update(delta_time, game.dist_to(binary[0].position.to_coordinate(), binary[1].position.to_coordinate()))
-            graph.update(delta_time, binary[0].velocity.magnitude())
+            graph.update(delta_time, binary[0].velocity.magnitude(), game.dist_to(binary[0].position.to_coordinate(), binary[1].position.to_coordinate()))
 
     draw_screen(positions)
 
