@@ -118,7 +118,7 @@ class CelestialBody():
         self.force_arrow.draw()
 
         # Draws circle
-        pygame.draw.circle(game.WIN, (255, 0, 0), (self.position.x, self.position.y), self.radius)
+        pygame.draw.circle(game.WIN, (255, 0, 0), (self.position.x / game.DIST_PER_PIXEL + game.WIDTH / 2, self.position.y / game.DIST_PER_PIXEL + game.HEIGHT / 2), self.radius / game.DIST_PER_PIXEL)
 
 
 
@@ -133,16 +133,27 @@ class BinaryObject(CelestialBody):
         if len(game.OBJECTS) == 2:
             for object in game.OBJECTS:
                 if object != self:
+                    object : BinaryObject = object
 
                     distance = game.get_dist(self.position.x, self.position.y, object.position.x, object.position.y)
+                    initial_distance = distance
 
-                    self.energy = (0.5 * self.mass * self.velocity.magnitude()**2) - ((game.G * self.mass * object.mass) / distance)
-                    
-                    self.energy -= (1 / distance) * self.mass * self.acceleration.magnitude() * 100 * delta_time
+                    self.energy = - 0.5 * (game.G * self.mass * object.mass) / (distance) # Binding energy
 
-                    vel = ((self.energy + ((game.G * self.mass * object.mass) / distance)) * 2 / self.mass)**0.5
+                    self.energy -= (32 * game.G**4 * (self.mass * object.mass)**2 * (self.mass + object.mass)) / (5 * game.C**5 * distance**5) * delta_time
 
-                    self.velocity.set_magnitude(vel)
+                    distance = - 0.5 * (game.G * self.mass * object.mass) / (self.energy)
+
+                    change_in_dist = initial_distance - distance
+
+                    direction = object.position - self.position
+
+                    angle = direction.return_angle()
+
+                    dist = 0.5 * change_in_dist
+
+                    self.position.x += dist * math.cos(angle)
+                    self.position.y += dist * math.sin(angle)
 
         super().update(delta_time)
 
@@ -162,4 +173,4 @@ class Trail():
             game.PARTICLES.remove(self)
 
     def draw(self):
-        pygame.draw.circle(game.WIN, (0, int(self.colour), 0), (self.position.x, self.position.y), self.radius)
+        pygame.draw.circle(game.WIN, (0, int(self.colour), 0), (self.position.x / game.DIST_PER_PIXEL + game.WIDTH / 2, self.position.y / game.DIST_PER_PIXEL + game.HEIGHT / 2), self.radius)

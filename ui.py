@@ -14,18 +14,21 @@ class SpawnBinaryInterface():
 
         self.open = False
 
-        self.spawn_button = Button(Vector2D(game.WIDTH/2, game.HEIGHT/2 + self.height/2 - 50), 200, 50, "Spawn", (100, 100, 100))
-
         self.mass1 = 1000
-        self.mass1_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 - 100), 300, 20, 50, 10000, self.mass1, "Mass 1", (30, 30, 30), (255, 255, 255))
+        self.mass1_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 - 150), 300, 20, 50, 10000, self.mass1, "Mass 1", (30, 30, 30), (255, 255, 255))
 
         self.mass2 = 1000
-        self.mass2_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2), 300, 20, 50, 10000, self.mass2, "Mass 2", (30, 30, 30), (255, 255, 255))
+        self.mass2_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 - 50), 300, 20, 50, 10000, self.mass2, "Mass 2", (30, 30, 30), (255, 255, 255))
 
         self.distance = 300
-        self.distance_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 + 100), 300, 20, 100, 1000, self.distance, "Distance", (30, 30, 30), (255, 255, 255))
+        self.distance_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 + 50), 300, 20, 100, 1000, self.distance, "Distance", (30, 30, 30), (255, 255, 255))
 
-        self.sliders = [self.mass1_slider, self.mass2_slider, self.distance_slider]
+        self.eccentricity = 0
+        self.eccentricity_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 + 150), 300, 20, 0, 1, self.eccentricity, "Eccentricity", (30, 30, 30), (255, 255, 255))
+
+        self.sliders = [self.mass1_slider, self.mass2_slider, self.distance_slider, self.eccentricity_slider]
+
+        self.spawn_button = Button(Vector2D(game.WIDTH/2, game.HEIGHT/2 + self.height/2 - 50), 200, 50, "Spawn", (100, 100, 100), lambda: self.spawn_binary(self.mass1, self.mass2, self.distance, self.eccentricity))
 
     def check_click(self, mouse):
         for slider in self.sliders:
@@ -37,9 +40,7 @@ class SpawnBinaryInterface():
                 slider.drag_offset = Vector2D(slider.value_to_pos(slider.value).x - mouse[0], 0)
                 return
 
-        if abs(mouse[0] - self.spawn_button.position.x) <= self.spawn_button.width/2 and abs(mouse[1] - self.spawn_button.position.y) <= self.spawn_button.height/2:
-            self.spawn_binary(self.mass1, self.mass2, self.distance)
-            self.open = False
+        self.spawn_button.check_click(mouse)
 
     def check_dragging(self, mouse):
         for slider in self.sliders:
@@ -52,28 +53,31 @@ class SpawnBinaryInterface():
             if slider.dragging:
                 slider.dragging = False
 
-    def spawn_binary(self, m1, m2, r):
+    def spawn_binary(self, m1, m2, r, e):
         x1 = (m2 * r) / (m1 + m2)
         x2 = (m1 * r) / (m1 + m2)
 
-        v1 = math.sqrt((game.G * m1 * m2 * x1) / (m1 * r**2))
+        v1 = math.sqrt((game.G * m1 * m2 * x1) / (m1 * r**2)) * (1 - e)
         #v1 = 25
         p1 = v1 * m1
         p2 = -p1
         v2 = p2 / m2
 
-        object1 = BinaryObject(Vector2D(-x1 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v1), m1)
-        object2 = BinaryObject(Vector2D(x2 + (game.WIDTH / 2), game.HEIGHT / 2), Vector2D(0, v2), m2)
+        object1 = BinaryObject(Vector2D(-x1, 0), Vector2D(0, v1), m1)
+        object2 = BinaryObject(Vector2D(x2, 0), Vector2D(0, v2), m2)
 
         game.CENTRE_OF_MASS = (m1, m2, object1.position, object2.position)
 
         game.OBJECTS.append(object1)
         game.OBJECTS.append(object2)
+
+        self.open = False
     
     def update(self):
         self.mass1 = int(self.mass1_slider.value)
         self.mass2 = int(self.mass2_slider.value)
         self.distance = int(self.distance_slider.value)
+        self.eccentricity = self.eccentricity_slider.value
 
     def draw(self):
         if not self.open: return
@@ -147,7 +151,10 @@ class Slider():
         pygame.draw.circle(game.WIN, self.slider_colour, self.value_to_pos(self.value).to_coordinate(), 1.5 * self.height/2)
 
         # Draw value text
-        text_surface = game.text_font.render(f"{round(self.value)}", True, (255, 255, 255))
+        if self.value < 10:
+            text_surface = game.text_font.render(f"{round(self.value, 2)}", True, (255, 255, 255))
+        else:
+            text_surface = game.text_font.render(f"{round(self.value)}", True, (255, 255, 255))
         game.WIN.blit(text_surface, (self.value_to_pos(self.value) - Vector2D(text_surface.get_width()/2, 50)).to_coordinate())
 
         # Draw name text
@@ -157,7 +164,7 @@ class Slider():
 
 
 class Button():
-    def __init__(self, position: Vector2D, width, height, text, background_colour) -> None:
+    def __init__(self, position: Vector2D, width, height, text, background_colour, func) -> None:
         self.position: Vector2D = position
         self.width = width
         self.height = height
@@ -165,6 +172,15 @@ class Button():
         self.text = text
 
         self.background_colour = background_colour
+
+        self.func: function = func
+
+    def check_click(self, mouse):
+        if abs(mouse[0] - self.position.x) <= self.width/2 and abs(mouse[1] - self.position.y) <= self.height/2:
+            self.pressed()
+
+    def pressed(self):
+        self.func()
 
     def draw(self):
         # Draw background rectangle
@@ -218,7 +234,7 @@ class Graph():
         self.y_axis_title2 = y_axis_title2
 
         self.x_axis_grid_separation = 1
-        self.y_axis_grid_separation = 0.005
+        self.y_axis_grid_separation = 1
 
         self.graph_timer = 0
         self.graph_time = 0.1

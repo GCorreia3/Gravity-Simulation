@@ -17,8 +17,14 @@ CENTRE_OF_MASS = None
 
 # Gravitational constant
 G = 1000
+C = 300#4.5e21
 
 START_MASS = 100
+
+DIST_PER_PIXEL = 1
+ZOOM_ACCELERATION = 1
+
+TIME_SPEED = 1
 
 
 fps_font = pygame.font.SysFont("bahnschrift", 20)

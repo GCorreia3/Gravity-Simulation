@@ -52,10 +52,16 @@ def draw_screen(positions):
 
     for i, pos in enumerate(positions):
         if i < len(positions) - 1:
-            pygame.draw.line(game.WIN, (255, 255, 255), (pos.x, pos.y), (positions[i+1].x, positions[i+1].y), 2)
+            pygame.draw.line(game.WIN, (255, 255, 255), (pos.x + game.WIDTH/2, pos.y + game.HEIGHT/2), (positions[i+1].x + game.WIDTH/2, positions[i+1].y + game.HEIGHT/2), 2)
 
-    label = game.fps_font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
-    game.WIN.blit(label, (0, 0))
+    fps_label = game.fps_font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
+    game.WIN.blit(fps_label, (0, 0))
+
+    time_label = game.fps_font.render(f"SPEED: {game.TIME_SPEED}x", True, (255, 255, 255))
+    game.WIN.blit(time_label, (game.WIDTH - time_label.get_width(), 0))
+
+    zoom_label = game.fps_font.render(f"ZOOM: {round(game.DIST_PER_PIXEL, 2)}", True, (255, 255, 255))
+    game.WIN.blit(zoom_label, (game.WIDTH/2 - zoom_label.get_width()/2, 0))
 
     if draw_graph:
         graph.draw()
@@ -78,7 +84,7 @@ def update_objects(delta_time):
 def update_trajectory(delta_time, positions):
     if is_pressed:
         if calculating_trajectory:
-            object = CelestialBody(Vector2D(start_mouse_pos[0], start_mouse_pos[1]), Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1]), game.START_MASS)
+            object = CelestialBody(Vector2D(start_mouse_pos[0] - game.WIDTH / 2, start_mouse_pos[1] - game.HEIGHT / 2), Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1]), game.START_MASS)
             game.TRAJECTORY_OBJECTS = copy.deepcopy(game.OBJECTS)
             game.TRAJECTORY_OBJECTS.append(object)
             for i in range(2000):
@@ -87,7 +93,7 @@ def update_trajectory(delta_time, positions):
                     if i == len(game.TRAJECTORY_OBJECTS) - 1:
                         positions.append(copy.deepcopy(o.position))
 
-                        if o.position.x > game.WIDTH or o.position.x < 0 or o.position.y > game.HEIGHT or o.position.y < 0:
+                        if o.position.x > game.WIDTH/2 * game.DIST_PER_PIXEL or o.position.x < -game.WIDTH/2 * game.DIST_PER_PIXEL or o.position.y > game.HEIGHT/2 * game.DIST_PER_PIXEL or o.position.y < -game.HEIGHT/2 * game.DIST_PER_PIXEL:
                             return positions
                         
                         for bobject in game.TRAJECTORY_OBJECTS:
@@ -146,7 +152,7 @@ def mouse_up(start_mouse_pos, end_mouse_pos, start_mass):
     # Spawn new celestial body at the mouse position
     initial_velocity = Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1])
 
-    game.OBJECTS.append(CelestialBody(Vector2D(start_mouse_pos[0], start_mouse_pos[1]), initial_velocity, start_mass))
+    game.OBJECTS.append(CelestialBody(Vector2D(start_mouse_pos[0] - game.WIDTH / 2, start_mouse_pos[1] - game.HEIGHT / 2), initial_velocity, start_mass))
 
 
 average_fps_elapsed_time = 0
@@ -203,6 +209,18 @@ while running:
 
     draw_screen(positions)
 
+    
+    keys_pressed = pygame.key.get_pressed()
+
+    if keys_pressed[pygame.K_UP]:
+        if game.DIST_PER_PIXEL > 0.5:
+            game.DIST_PER_PIXEL -= game.ZOOM_ACCELERATION * delta_time / game.TIME_SPEED
+
+    if keys_pressed[pygame.K_DOWN]:
+        if game.DIST_PER_PIXEL < 5:
+            game.DIST_PER_PIXEL += game.ZOOM_ACCELERATION * delta_time / game.TIME_SPEED
+
+
     # Loops through all of the events (there are many many types of events) that occur in this frame
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
@@ -212,6 +230,9 @@ while running:
             if event.key == pygame.K_s:
                 if not spawnBinaryInterface.open:
                     paused = True
+                    graph.points.clear()
+                    graph.points2.clear()
+                    graph.graph_total_time = 0
                 spawnBinaryInterface.open = not spawnBinaryInterface.open
 
             if spawnBinaryInterface.open: continue
@@ -220,7 +241,7 @@ while running:
                 paused = not paused
 
             if event.key == pygame.K_m:
-                game.OBJECTS.append(CelestialBody(Vector2D(game.WIDTH / 2, game.HEIGHT / 2), Vector2D(0, 0), 30000))
+                game.OBJECTS.append(CelestialBody(Vector2D(0, 0), Vector2D(0, 0), 30000))
 
             if event.key == pygame.K_UP:
                 if is_pressed:
@@ -234,14 +255,19 @@ while running:
                 game.OBJECTS.clear()
                 game.PARTICLES.clear()
                 game.CENTRE_OF_MASS = None
+                game.DIST_PER_PIXEL = 1
 
             if event.key == pygame.K_g:
                 draw_graph = not draw_graph
 
             if event.key == pygame.K_n:
                 for i in range (50):
-                    game.OBJECTS.append(CelestialBody(Vector2D(random.randint(0, game.WIDTH), random.randint(0, game.HEIGHT)), Vector2D(random.randint(-100, 100), random.randint(-100, 100)), random.randint(50, 100)))
-            
+                    game.OBJECTS.append(CelestialBody(Vector2D(random.randint(-game.WIDTH / 2, game.WIDTH/2), random.randint(-game.HEIGHT/2, game.HEIGHT/2)), Vector2D(random.randint(-100, 100), random.randint(-100, 100)), random.randint(50, 100)))
+
+            if event.key == pygame.K_RIGHT:
+                game.TIME_SPEED *= 2
+            if event.key == pygame.K_LEFT:
+                game.TIME_SPEED *= 0.5
 
         # Checks if the quit button in the top right is pressed on the window
         elif event.type == pygame.QUIT:
@@ -273,3 +299,4 @@ while running:
 
     end_time = perf_counter() # Get end time of the frame
     delta_time = end_time - start_time # delta_time is how long it takes for each frame to compute, this can then be used to make code frame rate independent
+    delta_time *= game.TIME_SPEED
