@@ -62,7 +62,7 @@ class CelestialBody():
         for object in game.OBJECTS:
             if object != self: # makes sure you will not attract itself
                 object: CelestialBody = object
-                distance = game.get_dist(position.x, position.y, object.position.x, object.position.y) # Example of using functions from game
+                distance = game.get_distance(position, object.position) # Example of using functions from game
 
                 # Calculates if the object and self are colliding
                 if distance < self.radius:
@@ -135,25 +135,17 @@ class BinaryObject(CelestialBody):
                 if object != self:
                     object : BinaryObject = object
 
-                    distance = game.get_dist(self.position.x, self.position.y, object.position.x, object.position.y)
-                    initial_distance = distance
+                    distance = game.get_distance(self.position, object.position)
 
-                    self.energy = - 0.5 * (game.G * self.mass * object.mass) / (distance) # Binding energy
+                    change_in_dist = -(64 * game.G**3 * (self.mass * object.mass) * (self.mass + object.mass)) / (5 * game.C**5 * distance**3) * delta_time
 
-                    self.energy -= (32 * game.G**4 * (self.mass * object.mass)**2 * (self.mass + object.mass)) / (5 * game.C**5 * distance**5) * delta_time
-
-                    distance = - 0.5 * (game.G * self.mass * object.mass) / (self.energy)
-
-                    change_in_dist = initial_distance - distance
+                    dist_moved = 0.5 * change_in_dist
 
                     direction = object.position - self.position
-
                     angle = direction.return_angle()
 
-                    dist = 0.5 * change_in_dist
-
-                    self.position.x += dist * math.cos(angle)
-                    self.position.y += dist * math.sin(angle)
+                    self.position.x += dist_moved * math.cos(angle + math.pi)
+                    self.position.y += dist_moved * math.sin(angle + math.pi)
 
         super().update(delta_time)
 
