@@ -14,11 +14,11 @@ class SpawnBinaryInterface():
 
         self.open = False
 
-        self.mass1 = 1000
-        self.mass1_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 - 150), 300, 20, 50, 10000, self.mass1, "Mass 1", (30, 30, 30), (255, 255, 255))
+        self.mass1 = 1
+        self.mass1_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 - 150), 300, 20, 0.05, 100, self.mass1, "Mass 1", (30, 30, 30), (255, 255, 255))
 
-        self.mass2 = 1000
-        self.mass2_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 - 50), 300, 20, 50, 10000, self.mass2, "Mass 2", (30, 30, 30), (255, 255, 255))
+        self.mass2 = 1
+        self.mass2_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 - 50), 300, 20, 0.05, 100, self.mass2, "Mass 2", (30, 30, 30), (255, 255, 255))
 
         self.distance = 300
         self.distance_slider = Slider(Vector2D(game.WIDTH/2, game.HEIGHT/2 + 50), 300, 20, 100, 1000, self.distance, "Distance", (30, 30, 30), (255, 255, 255))
@@ -28,7 +28,7 @@ class SpawnBinaryInterface():
 
         self.sliders = [self.mass1_slider, self.mass2_slider, self.distance_slider, self.eccentricity_slider]
 
-        self.spawn_button = Button(Vector2D(game.WIDTH/2, game.HEIGHT/2 + self.height/2 - 50), 200, 50, "Spawn", (100, 100, 100), lambda: self.spawn_binary(self.mass1, self.mass2, self.distance, self.eccentricity))
+        self.spawn_button = Button(Vector2D(game.WIDTH/2, game.HEIGHT/2 + self.height/2 - 50), 200, 50, "Spawn", (100, 100, 100), lambda: self.spawn_binary(self.mass1 * game.START_MASS, self.mass2 * game.START_MASS, self.distance * game.ZOOM_ACCELERATION, self.eccentricity))
 
     def check_click(self, mouse):
         for slider in self.sliders:

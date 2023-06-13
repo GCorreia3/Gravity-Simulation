@@ -35,7 +35,7 @@ arrow_toggle = Toggle(Vector2D(game.WIDTH - 100, 25), 25, 25, "Arrows", (255, 25
 trail_toggle = Toggle(Vector2D(game.WIDTH - 100, 60), 25, 25, "Trail", (255, 255, 255), game.draw_trails)
 
 # Function which is called every frame to draw the objects
-def draw_screen(positions):
+def draw_screen(positions, sim_time):
     game.WIN.fill((0, 0, 0)) # fills screen with colour
 
     for particle in game.PARTICLES:
@@ -60,7 +60,38 @@ def draw_screen(positions):
     fps_label = game.fps_font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
     game.WIN.blit(fps_label, (0, 0))
 
-    zoom_label = game.fps_font.render(f"ZOOM: {round(game.DIST_PER_PIXEL, 2)}", True, (255, 255, 255))
+    # Goofy ahh way of calculating time
+    years = sim_time / 3.1536e7
+
+    days = (years - math.floor(years)) * 365
+
+    hours = (days - math.floor(days)) * 24
+
+    minutes = (hours - math.floor(hours)) * 60
+    
+    seconds = (minutes - math.floor(minutes)) * 60
+
+    milliseconds = (sim_time - math.floor(sim_time)) * 1000
+
+    nanoseconds = (milliseconds - math.floor(milliseconds)) * 1000
+
+    time_text = ""
+
+    if math.floor(years) >= 1:
+        time_text = f"{math.floor(years)}y, {math.floor(days)}d, {math.floor(hours)}h, {math.floor(minutes)}m, {math.floor(seconds)}s"
+    elif math.floor(days) >= 1:
+        time_text = f"{math.floor(days)}d, {math.floor(hours)}h, {math.floor(minutes)}m, {math.floor(seconds)}s"
+    elif math.floor(hours) >= 1:
+        time_text = f"{math.floor(hours)}h, {math.floor(minutes)}m, {math.floor(seconds)}s, {math.floor(milliseconds)}ms"
+    elif math.floor(minutes) >= 1:
+        time_text = f"{math.floor(minutes)}m, {math.floor(seconds)}s, {math.floor(milliseconds)}ms"
+    else:
+        time_text = f"{math.floor(seconds)}s, {math.floor(milliseconds)}ms, {math.floor(nanoseconds)}ns"
+    
+    time_label = game.fps_font.render(time_text, True, (255, 255, 255))
+    game.WIN.blit(time_label, (0, fps_label.get_height()))
+
+    zoom_label = game.fps_font.render(f"METER PER PIXEL: {round(game.DIST_PER_PIXEL, 2)}", True, (255, 255, 255))
     game.WIN.blit(zoom_label, (game.WIDTH/2 - zoom_label.get_width()/2, 0))
 
     time_label = game.fps_font.render(f"SPEED: {game.TIME_SPEED}x", True, (255, 255, 255))
@@ -159,7 +190,7 @@ def mouse_up(start_mouse_pos, end_mouse_pos, start_mass):
     # Spawn new celestial body at the mouse position
     initial_velocity = Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1])
 
-    game.OBJECTS.append(CelestialBody(Vector2D((start_mouse_pos[0] - game.WIDTH / 2) * game.DIST_PER_PIXEL, (start_mouse_pos[1] - game.HEIGHT / 2) * game.DIST_PER_PIXEL), initial_velocity, start_mass))
+    game.OBJECTS.append(CelestialBody(Vector2D((start_mouse_pos[0] - game.WIDTH / 2) * game.DIST_PER_PIXEL, (start_mouse_pos[1] - game.HEIGHT / 2) * game.DIST_PER_PIXEL), initial_velocity * game.DIST_PER_PIXEL, start_mass))
 
 
 average_fps_elapsed_time = 0
@@ -190,6 +221,7 @@ def quit():
     sys.exit(0)
 
 delta_time = 1
+sim_time = 0
 
 # Main loop
 while running:
@@ -214,18 +246,22 @@ while running:
         if len(binary) == 2:
             graph.update(delta_time, binary[0].velocity.magnitude(), game.dist_to(binary[0].position.to_coordinate(), binary[1].position.to_coordinate()))
 
-    draw_screen(positions)
+    if not paused:
+        sim_time += delta_time
+
+    draw_screen(positions, sim_time)
 
     
     keys_pressed = pygame.key.get_pressed()
 
-    if keys_pressed[pygame.K_UP]:
-        if game.DIST_PER_PIXEL > 0.5:
-            game.DIST_PER_PIXEL -= game.ZOOM_ACCELERATION * delta_time / game.TIME_SPEED
+    if not spawnBinaryInterface.open:
+        if keys_pressed[pygame.K_UP]:
+            if game.DIST_PER_PIXEL > 0.5:
+                game.DIST_PER_PIXEL -= game.DIST_PER_PIXEL * delta_time / game.TIME_SPEED
 
-    if keys_pressed[pygame.K_DOWN]:
-        if game.DIST_PER_PIXEL < 5:
-            game.DIST_PER_PIXEL += game.ZOOM_ACCELERATION * delta_time / game.TIME_SPEED
+        if keys_pressed[pygame.K_DOWN]:
+            if game.DIST_PER_PIXEL < 1e10:
+                game.DIST_PER_PIXEL += game.DIST_PER_PIXEL * delta_time / game.TIME_SPEED
 
 
     # Loops through all of the events (there are many many types of events) that occur in this frame
@@ -262,7 +298,8 @@ while running:
                 game.OBJECTS.clear()
                 game.PARTICLES.clear()
                 game.CENTRE_OF_MASS = None
-                game.DIST_PER_PIXEL = 1
+                game.DIST_PER_PIXEL = game.ZOOM_ACCELERATION
+                sim_time = 0
 
             if event.key == pygame.K_g:
                 draw_graph = not draw_graph

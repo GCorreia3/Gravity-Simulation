@@ -16,7 +16,7 @@ class CelestialBody():
         # EXAMPLE: if you call object.x (where object is just a random instance of this class) it would take the x value of the object.
         self.position: Vector2D = position
         self.mass = mass
-        self.radius = (self.mass / math.pi)**0.5 # Making radius related to mass (mass = area)
+        self.radius = (3/4 * (self.mass / game.DENSITY) / math.pi)**(1/3) # Making radius related to mass (mass = area)
 
         self.velocity: Vector2D = initial_velocity
         self.new_velocity: Vector2D = initial_velocity
@@ -63,6 +63,7 @@ class CelestialBody():
             if object != self: # makes sure you will not attract itself
                 object: CelestialBody = object
                 distance = game.get_distance(position, object.position) # Example of using functions from game
+                direction = object.position - position
 
                 # Calculates if the object and self are colliding
                 if distance < self.radius:
@@ -70,7 +71,7 @@ class CelestialBody():
                     if self.colliding == False:
                         combined_mass = self.mass + object.mass
                         # Adds new celestial body to list with new initial states of the combination of the two previous states
-                        object_to_add.append(CelestialBody(Vector2D(position.x, position.y), Vector2D((self.mass*velocity.x + object.mass*object.velocity.x) / combined_mass, (self.mass*velocity.y + object.mass*object.velocity.y) / combined_mass), combined_mass))
+                        object_to_add.append(CelestialBody(Vector2D(position.x + (self.mass / combined_mass) * direction.x, position.y + (self.mass / combined_mass) * direction.y), Vector2D((self.mass*velocity.x + object.mass*object.velocity.x) / combined_mass, (self.mass*velocity.y + object.mass*object.velocity.y) / combined_mass), combined_mass))
 
                         # Adds the two colliding celestial bodies to a list to then be removed later
                         objects_to_remove.append(self)
@@ -158,7 +159,7 @@ class Trail():
         self.radius = 1
 
     def update(self, delta_time):
-        self.colour -= delta_time * 5
+        self.colour -= delta_time / game.TIME_SPEED * 5
         self.colour = max(0, self.colour)
         
         if self.colour <= 0:
