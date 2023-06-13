@@ -16,7 +16,9 @@ class CelestialBody():
         # EXAMPLE: if you call object.x (where object is just a random instance of this class) it would take the x value of the object.
         self.position: Vector2D = position
         self.mass = mass
-        self.radius = (3/4 * (self.mass / game.DENSITY) / math.pi)**(1/3) # Making radius related to mass (mass = area)
+        #self.radius = (3/4 * (self.mass / game.DENSITY) / math.pi)**(1/3) # Making radius related to mass (mass = area)
+
+        self.radius = (2 * game.G * self.mass) / (game.C ** 2)
 
         self.velocity: Vector2D = initial_velocity
         self.new_velocity: Vector2D = initial_velocity

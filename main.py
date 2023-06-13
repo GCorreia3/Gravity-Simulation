@@ -29,7 +29,7 @@ calculating_trajectory = False
 positions = list()
 
 spawnBinaryInterface = SpawnBinaryInterface(Vector2D(game.WIDTH/2, game.HEIGHT/2), game.WIDTH - 200, game.HEIGHT - 200)
-graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=10, y_start=0, y_end=20, y_start2=0, y_end2=20, x_axis_title="Time/s", y_axis_title="Velocity", y_axis_title2="Separation")
+graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=0.01, y_start=0, y_end=20, y_start2=0, y_end2=20, x_axis_title="Time/s", y_axis_title="Velocity", y_axis_title2="Separation")
 
 arrow_toggle = Toggle(Vector2D(game.WIDTH - 100, 25), 25, 25, "Arrows", (255, 255, 255), game.draw_arrows)
 trail_toggle = Toggle(Vector2D(game.WIDTH - 100, 60), 25, 25, "Trail", (255, 255, 255), game.draw_trails)
@@ -242,7 +242,7 @@ while running:
         if isinstance(object, BinaryObject):
             binary.append(object)
 
-    if draw_graph:
+    if draw_graph and not paused:
         if len(binary) == 2:
             graph.update(delta_time, binary[0].velocity.magnitude(), game.dist_to(binary[0].position.to_coordinate(), binary[1].position.to_coordinate()))
 
@@ -298,7 +298,7 @@ while running:
                 game.OBJECTS.clear()
                 game.PARTICLES.clear()
                 game.CENTRE_OF_MASS = None
-                game.DIST_PER_PIXEL = game.ZOOM_ACCELERATION
+                game.DIST_PER_PIXEL = game.START_DIST
                 sim_time = 0
 
             if event.key == pygame.K_g:
