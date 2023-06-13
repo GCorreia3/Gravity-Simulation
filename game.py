@@ -26,6 +26,8 @@ ZOOM_ACCELERATION = 1
 
 TIME_SPEED = 1
 
+draw_arrows = True
+draw_trails = True
 
 fps_font = pygame.font.SysFont("bahnschrift", 20)
 title_font = pygame.font.SysFont("Calibri", 40)

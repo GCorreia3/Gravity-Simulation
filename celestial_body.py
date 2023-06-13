@@ -165,4 +165,5 @@ class Trail():
             game.PARTICLES.remove(self)
 
     def draw(self):
-        pygame.draw.circle(game.WIN, (0, int(self.colour), 0), (self.position.x / game.DIST_PER_PIXEL + game.WIDTH / 2, self.position.y / game.DIST_PER_PIXEL + game.HEIGHT / 2), self.radius)
+        if game.draw_trails:
+            pygame.draw.circle(game.WIN, (0, int(self.colour), 0), (self.position.x / game.DIST_PER_PIXEL + game.WIDTH / 2, self.position.y / game.DIST_PER_PIXEL + game.HEIGHT / 2), self.radius)

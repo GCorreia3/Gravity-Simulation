@@ -192,6 +192,44 @@ class Button():
 
 
 
+class Toggle():
+    def __init__(self, position: Vector2D, width, height, text, box_colour, condition: bool) -> None:
+        self.position: Vector2D = position
+        self.width = width
+        self.height = height
+
+        self.text = text
+
+        self.box_colour = box_colour
+
+        self.condition = condition
+
+        self.toggle_offset = 5
+
+    def check_click(self, mouse):
+        if abs(mouse[0] - self.position.x) <= self.width/2 and abs(mouse[1] - self.position.y) <= self.height/2:
+            self.pressed()
+            return True
+        
+        return False
+
+    def pressed(self):
+        self.condition = not self.condition
+
+    def draw(self):
+        # Draw background rectangle
+        pygame.draw.rect(game.WIN, self.box_colour, (self.position.x - self.width/2, self.position.y - self.height/2, self.width, self.height), 2)
+
+        # Draw toggle
+        if self.condition:
+            pygame.draw.rect(game.WIN, (0, 255, 0), (self.position.x - self.width/2 + self.toggle_offset, self.position.y - self.height/2 + self.toggle_offset, self.width - 2*self.toggle_offset, self.height - 2*self.toggle_offset))
+
+        # Draw toggle text
+        text_surface = game.text_font.render(self.text, True, (255, 255, 255))
+        game.WIN.blit(text_surface, (self.position.x + self.width, self.position.y - text_surface.get_height()/2))
+
+
+
 class Graph():
     def __init__(self, position: Vector2D, width, height, colour, x_start, x_end, y_start, y_end, y_start2, y_end2, x_axis_title, y_axis_title, y_axis_title2) -> None:
         self.position: Vector2D = position

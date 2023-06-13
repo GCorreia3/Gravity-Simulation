@@ -6,7 +6,7 @@ import sys
 import game
 from celestial_body import CelestialBody, BinaryObject
 from custom_maths import Vector2D
-from ui import SpawnBinaryInterface, Graph
+from ui import SpawnBinaryInterface, Graph, Toggle
 from time import perf_counter
 import math
 import random
@@ -30,6 +30,9 @@ positions = list()
 
 spawnBinaryInterface = SpawnBinaryInterface(Vector2D(game.WIDTH/2, game.HEIGHT/2), game.WIDTH - 200, game.HEIGHT - 200)
 graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=10, y_start=0, y_end=20, y_start2=0, y_end2=20, x_axis_title="Time/s", y_axis_title="Velocity", y_axis_title2="Separation")
+
+arrow_toggle = Toggle(Vector2D(game.WIDTH - 100, 25), 25, 25, "Arrows", (255, 255, 255), game.draw_arrows)
+trail_toggle = Toggle(Vector2D(game.WIDTH - 100, 60), 25, 25, "Trail", (255, 255, 255), game.draw_trails)
 
 # Function which is called every frame to draw the objects
 def draw_screen(positions):
@@ -57,14 +60,17 @@ def draw_screen(positions):
     fps_label = game.fps_font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
     game.WIN.blit(fps_label, (0, 0))
 
-    time_label = game.fps_font.render(f"SPEED: {game.TIME_SPEED}x", True, (255, 255, 255))
-    game.WIN.blit(time_label, (game.WIDTH - time_label.get_width(), 0))
-
     zoom_label = game.fps_font.render(f"ZOOM: {round(game.DIST_PER_PIXEL, 2)}", True, (255, 255, 255))
     game.WIN.blit(zoom_label, (game.WIDTH/2 - zoom_label.get_width()/2, 0))
 
+    time_label = game.fps_font.render(f"SPEED: {game.TIME_SPEED}x", True, (255, 255, 255))
+    game.WIN.blit(time_label, (game.WIDTH/2 - time_label.get_width()/2, zoom_label.get_height()))
+
     if draw_graph:
         graph.draw()
+
+    arrow_toggle.draw()
+    trail_toggle.draw()
 
     spawnBinaryInterface.draw()
 
@@ -84,14 +90,14 @@ def update_objects(delta_time):
 def update_trajectory(delta_time, positions):
     if is_pressed:
         if calculating_trajectory:
-            object = CelestialBody(Vector2D(start_mouse_pos[0] - game.WIDTH / 2, start_mouse_pos[1] - game.HEIGHT / 2), Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1]), game.START_MASS)
+            object = CelestialBody(Vector2D((start_mouse_pos[0] - game.WIDTH / 2) * game.DIST_PER_PIXEL, (start_mouse_pos[1] - game.HEIGHT / 2) * game.DIST_PER_PIXEL), Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1]), game.START_MASS)
             game.TRAJECTORY_OBJECTS = copy.deepcopy(game.OBJECTS)
             game.TRAJECTORY_OBJECTS.append(object)
-            for i in range(2000):
+            for _ in range(2000):
                 for i, o in enumerate(game.TRAJECTORY_OBJECTS):
                     o.position = iterate_pos(delta_time, o)
                     if i == len(game.TRAJECTORY_OBJECTS) - 1:
-                        positions.append(copy.deepcopy(o.position))
+                        positions.append(copy.deepcopy(o.position / game.DIST_PER_PIXEL))
 
                         if o.position.x > game.WIDTH/2 * game.DIST_PER_PIXEL or o.position.x < -game.WIDTH/2 * game.DIST_PER_PIXEL or o.position.y > game.HEIGHT/2 * game.DIST_PER_PIXEL or o.position.y < -game.HEIGHT/2 * game.DIST_PER_PIXEL:
                             return positions
@@ -116,7 +122,8 @@ def iterate_pos(delta_time, object: CelestialBody):
         if o != object:
                 
             o: CelestialBody = o
-            distance = game.get_dist(o.position.x, o.position.y, intermediate_position.x, intermediate_position.y)
+
+            distance = game.get_distance(o.position, intermediate_position) # Example of using functions from game
 
             force = game.G * (object.mass * o.mass / (distance)**2) # Only gets the magnitude of the force
 
@@ -152,7 +159,7 @@ def mouse_up(start_mouse_pos, end_mouse_pos, start_mass):
     # Spawn new celestial body at the mouse position
     initial_velocity = Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1])
 
-    game.OBJECTS.append(CelestialBody(Vector2D(start_mouse_pos[0] - game.WIDTH / 2, start_mouse_pos[1] - game.HEIGHT / 2), initial_velocity, start_mass))
+    game.OBJECTS.append(CelestialBody(Vector2D((start_mouse_pos[0] - game.WIDTH / 2) * game.DIST_PER_PIXEL, (start_mouse_pos[1] - game.HEIGHT / 2) * game.DIST_PER_PIXEL), initial_velocity, start_mass))
 
 
 average_fps_elapsed_time = 0
@@ -243,13 +250,13 @@ while running:
             if event.key == pygame.K_m:
                 game.OBJECTS.append(CelestialBody(Vector2D(0, 0), Vector2D(0, 0), 30000))
 
-            if event.key == pygame.K_UP:
-                if is_pressed:
-                    game.START_MASS *= 2
+            # if event.key == pygame.K_UP:
+            #     if is_pressed:
+            #         game.START_MASS *= 2
 
-            if event.key == pygame.K_DOWN:
-                if is_pressed:
-                    game.START_MASS *= 0.5
+            # if event.key == pygame.K_DOWN:
+            #     if is_pressed:
+            #         game.START_MASS *= 0.5
 
             if event.key == pygame.K_r:
                 game.OBJECTS.clear()
@@ -275,9 +282,13 @@ while running:
 
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if not spawnBinaryInterface.open:
-                start_mouse_pos = pygame.mouse.get_pos()
-                is_pressed = True
-                calculating_trajectory = True
+                if arrow_toggle.check_click(pygame.mouse.get_pos()) == False and trail_toggle.check_click(pygame.mouse.get_pos()) == False:
+                    start_mouse_pos = pygame.mouse.get_pos()
+                    is_pressed = True
+                    calculating_trajectory = True
+                else:
+                    game.draw_arrows = arrow_toggle.condition
+                    game.draw_trails = trail_toggle.condition
             else:
                 spawnBinaryInterface.check_click(pygame.mouse.get_pos())
         
