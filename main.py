@@ -33,13 +33,21 @@ graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (1
 
 arrow_toggle = Toggle(Vector2D(game.WIDTH - 100, 25), 25, 25, "Arrows", (255, 255, 255), game.draw_arrows)
 trail_toggle = Toggle(Vector2D(game.WIDTH - 100, 60), 25, 25, "Trail", (255, 255, 255), game.draw_trails)
+realistic_toggle = Toggle(Vector2D(game.WIDTH - 100, 95), 25, 25, "Realistic", (255, 255, 255), game.realistic)
 
 # Function which is called every frame to draw the objects
 def draw_screen(positions, sim_time):
     game.WIN.fill((0, 0, 0)) # fills screen with colour
 
-    for particle in game.PARTICLES:
-        particle.draw()
+    if game.draw_trails:
+        for object in game.OBJECTS:
+            # Draws trail
+            if len(object.trail_positions) > 1:
+                pygame.draw.lines(game.WIN, (0, 255, 0), False, object.trail_positions, 1)
+
+        for trail in game.PREVIOUS_TRAILS:
+            if len(trail) > 1:
+                pygame.draw.lines(game.WIN, (0, 150, 0), False, trail, 1)
 
     # Loops through objects which are in the game list
     for object in game.OBJECTS:
@@ -53,9 +61,8 @@ def draw_screen(positions, sim_time):
         pygame.draw.line(game.WIN, (0, 0, 255), start_mouse_pos, end_mouse_pos, 4)
         pygame.draw.circle(game.WIN, (255, 0, 0), start_mouse_pos, (game.START_MASS / math.pi)**0.5)
 
-    for i, pos in enumerate(positions):
-        if i < len(positions) - 1:
-            pygame.draw.line(game.WIN, (255, 255, 255), (pos.x + game.WIDTH/2, pos.y + game.HEIGHT/2), (positions[i+1].x + game.WIDTH/2, positions[i+1].y + game.HEIGHT/2), 2)
+    if len(positions) > 1:
+        pygame.draw.lines(game.WIN, (255, 255, 255), False, positions, 2)
 
     fps_label = game.fps_font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
     game.WIN.blit(fps_label, (0, 0))
@@ -102,6 +109,7 @@ def draw_screen(positions, sim_time):
 
     arrow_toggle.draw()
     trail_toggle.draw()
+    realistic_toggle.draw()
 
     spawnBinaryInterface.draw()
 
@@ -109,10 +117,6 @@ def draw_screen(positions, sim_time):
 
 
 def update_objects(delta_time):
-    for particle in game.PARTICLES:
-        if not paused:
-            particle.update(delta_time)
-
     for object in game.OBJECTS:
         if not paused:
             object.update(delta_time)
@@ -128,7 +132,7 @@ def update_trajectory(delta_time, positions):
                 for i, o in enumerate(game.TRAJECTORY_OBJECTS):
                     o.position = iterate_pos(delta_time, o)
                     if i == len(game.TRAJECTORY_OBJECTS) - 1:
-                        positions.append(copy.deepcopy(o.position / game.DIST_PER_PIXEL))
+                        positions.append(copy.deepcopy((o.position.x / game.DIST_PER_PIXEL + game.WIDTH/2, o.position.y / game.DIST_PER_PIXEL + game.HEIGHT/2)))
 
                         if o.position.x > game.WIDTH/2 * game.DIST_PER_PIXEL or o.position.x < -game.WIDTH/2 * game.DIST_PER_PIXEL or o.position.y > game.HEIGHT/2 * game.DIST_PER_PIXEL or o.position.y < -game.HEIGHT/2 * game.DIST_PER_PIXEL:
                             return positions
@@ -199,6 +203,8 @@ n_fps = 1
 showing_average_fps = 0
 def get_average_fps(delta_time):
 
+    delta_time = delta_time / game.TIME_SPEED
+
     global average_fps_elapsed_time, average_fps, n_fps, showing_average_fps
     average_fps_elapsed_time += delta_time
     if average_fps_elapsed_time > 0.2:
@@ -213,6 +219,14 @@ def get_average_fps(delta_time):
         n_fps += 1
 
     return showing_average_fps
+
+
+def reset():
+    game.OBJECTS.clear()
+    game.PREVIOUS_TRAILS.clear()
+    game.CENTRE_OF_MASS = None
+    game.DIST_PER_PIXEL = game.START_DIST
+    return 0
 
 
 def quit():
@@ -295,11 +309,7 @@ while running:
             #         game.START_MASS *= 0.5
 
             if event.key == pygame.K_r:
-                game.OBJECTS.clear()
-                game.PARTICLES.clear()
-                game.CENTRE_OF_MASS = None
-                game.DIST_PER_PIXEL = game.START_DIST
-                sim_time = 0
+                sim_time = reset()
 
             if event.key == pygame.K_g:
                 draw_graph = not draw_graph
@@ -320,12 +330,39 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if not spawnBinaryInterface.open:
                 if arrow_toggle.check_click(pygame.mouse.get_pos()) == False and trail_toggle.check_click(pygame.mouse.get_pos()) == False:
-                    start_mouse_pos = pygame.mouse.get_pos()
-                    is_pressed = True
-                    calculating_trajectory = True
+                    if realistic_toggle.check_click(pygame.mouse.get_pos()) == False:
+                        start_mouse_pos = pygame.mouse.get_pos()
+                        is_pressed = True
+                        calculating_trajectory = True
+                    else:
+                        game.realistic = realistic_toggle.condition
+                        
+                        if game.realistic:
+                            game.G = 6.67e-11
+                            game.C = 3e8
+                            game.START_MASS = 1.989e30
+                            game.DENSITY = 10e17
+                            game.START_DIST = 100
+                            graph.x_axis_grid_separation = 0.0001
+                            graph.y_axis_grid_separation = 100000
+                            graph.graph_time = 0.00000000001
+                            graph.x_end = 0.01
+                        else:
+                            game.G = 1000
+                            game.C = 300
+                            game.START_MASS = 100
+                            game.DENSITY = 1
+                            game.START_DIST = 1
+                            graph.x_axis_grid_separation = 1
+                            graph.y_axis_grid_separation = 10
+                            graph.graph_time = 0.01
+                            graph.x_end = 30
+
+                        reset()
                 else:
                     game.draw_arrows = arrow_toggle.condition
                     game.draw_trails = trail_toggle.condition
+
             else:
                 spawnBinaryInterface.check_click(pygame.mouse.get_pos())
         

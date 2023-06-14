@@ -16,15 +16,17 @@ class CelestialBody():
         # EXAMPLE: if you call object.x (where object is just a random instance of this class) it would take the x value of the object.
         self.position: Vector2D = position
         self.mass = mass
-        #self.radius = (3/4 * (self.mass / game.DENSITY) / math.pi)**(1/3) # Making radius related to mass (mass = area)
+        if game.realistic:
+            self.radius = (2 * game.G * self.mass) / (game.C ** 2)
+        else:
+            self.radius = ((self.mass / game.DENSITY) / math.pi)**0.5 # Making radius related to mass (mass = area)
 
-        self.radius = (2 * game.G * self.mass) / (game.C ** 2)
 
         self.velocity: Vector2D = initial_velocity
         self.new_velocity: Vector2D = initial_velocity
         self.acceleration = Vector2D(0, 0) # Acceleration starts off as 0 in the x axis and 0 in the y axis
 
-        self.dist_between_spawns = 1
+        self.dist_between_spawns = 10
         self.last_spawn_pos: Vector2D = position + self.dist_between_spawns
 
         self.velocity_arrow = VectorArrow(self.position, self.velocity.return_normalised(), self.velocity.magnitude() / 2, 2, (0, 0, 255))
@@ -33,13 +35,19 @@ class CelestialBody():
 
         self.colliding = False
 
+        self.trail_positions = []
+        self.trail_length = 1000
+
     def update(self, delta_time):
 
         self.velocity_arrow.update(self.position, self.velocity.return_normalised(), self.velocity.magnitude() / 2)
         self.force_arrow.update(self.position, self.acceleration.return_normalised(), self.acceleration.magnitude() / 2)
 
-        if game.get_dist(self.position.x, self.position.y, self.last_spawn_pos.x, self.last_spawn_pos.y) >= self.dist_between_spawns:
-            game.PARTICLES.append(Trail(copy.deepcopy(self.position)))
+        if game.get_dist(self.position.x, self.position.y, self.last_spawn_pos.x, self.last_spawn_pos.y) / game.DIST_PER_PIXEL >= self.dist_between_spawns:
+            self.trail_positions.append((self.position.x / game.DIST_PER_PIXEL + game.WIDTH / 2, self.position.y / game.DIST_PER_PIXEL + game.HEIGHT / 2))
+            if len(self.trail_positions) > self.trail_length:
+                self.trail_positions.pop(0)
+            
             self.last_spawn_pos = self.position
 
         intermediate_position = self.position + self.velocity * (delta_time / 2)
@@ -79,6 +87,9 @@ class CelestialBody():
                         objects_to_remove.append(self)
                         objects_to_remove.append(object)
                         self.colliding = True
+
+                        game.PREVIOUS_TRAILS.append(self.trail_positions)
+                        game.PREVIOUS_TRAILS.append(object.trail_positions)
                 else:
                     # Run if the objects are not colliding e.i. they are attracting each other
 
@@ -142,7 +153,7 @@ class BinaryObject(CelestialBody):
 
                     change_in_dist = -(64 * game.G**3 * (self.mass * object.mass) * (self.mass + object.mass)) / (5 * game.C**5 * distance**3) * delta_time
 
-                    dist_moved = 0.5 * change_in_dist
+                    dist_moved = 0.25 * change_in_dist
 
                     direction = object.position - self.position
                     angle = direction.return_angle()
@@ -151,22 +162,3 @@ class BinaryObject(CelestialBody):
                     self.position.y += dist_moved * math.sin(angle + math.pi)
 
         super().update(delta_time)
-
-
-
-class Trail():
-    def __init__(self, position: Vector2D) -> None:
-        self.position: Vector2D = position
-        self.colour = 255
-        self.radius = 1
-
-    def update(self, delta_time):
-        self.colour -= delta_time / game.TIME_SPEED * 5
-        self.colour = max(0, self.colour)
-        
-        if self.colour <= 0:
-            game.PARTICLES.remove(self)
-
-    def draw(self):
-        if game.draw_trails:
-            pygame.draw.circle(game.WIN, (0, int(self.colour), 0), (self.position.x / game.DIST_PER_PIXEL + game.WIDTH / 2, self.position.y / game.DIST_PER_PIXEL + game.HEIGHT / 2), self.radius)

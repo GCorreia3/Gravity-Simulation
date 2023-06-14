@@ -11,24 +11,26 @@ pygame.init()
 # Main list of objects which you append new objects into. This is great since you are able to access this list form any file if you import game
 OBJECTS = []
 TRAJECTORY_OBJECTS = []
-PARTICLES = []
+PREVIOUS_TRAILS = []
 
 CENTRE_OF_MASS = None
 
 # Gravitational constant
 G = 6.67e-11#1000
-C = 3e8#300#4.5e21
+C = 3e8#300
 
 START_MASS = 1.989e30#100
 DENSITY = 10e17#1408
 
-DIST_PER_PIXEL = 1e2#1
-START_DIST = 1e2
+DIST_PER_PIXEL = 100#1
+START_DIST = 100
 
 TIME_SPEED = 1
 
 draw_arrows = True
 draw_trails = True
+
+realistic = True
 
 fps_font = pygame.font.SysFont("bahnschrift", 20)
 title_font = pygame.font.SysFont("Calibri", 40)

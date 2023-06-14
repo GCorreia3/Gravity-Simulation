@@ -58,7 +58,6 @@ class SpawnBinaryInterface():
         x2 = (m1 * r) / (m1 + m2)
 
         v1 = math.sqrt((game.G * m1 * m2 * x1) / (m1 * r**2)) * (1 - e)
-        #v1 = 25
         p1 = v1 * m1
         p2 = -p1
         v2 = p2 / m2
