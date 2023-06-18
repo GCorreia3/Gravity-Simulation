@@ -35,8 +35,7 @@ class CelestialBody():
 
         self.colliding = False
 
-        self.trail_positions = []
-        self.trail_length = 1000
+        self.trail_manager = TrailManager()
 
     def update(self, delta_time):
 
@@ -44,9 +43,7 @@ class CelestialBody():
         self.force_arrow.update(self.position, self.acceleration.return_normalised(), self.acceleration.magnitude() / 2)
 
         if game.get_dist(self.position.x, self.position.y, self.last_spawn_pos.x, self.last_spawn_pos.y) / game.DIST_PER_PIXEL >= self.dist_between_spawns:
-            self.trail_positions.append((self.position.x / game.DIST_PER_PIXEL + game.WIDTH / 2, self.position.y / game.DIST_PER_PIXEL + game.HEIGHT / 2))
-            if len(self.trail_positions) > self.trail_length:
-                self.trail_positions.pop(0)
+            self.trail_manager.add_trail_point(self.position)
             
             self.last_spawn_pos = self.position
 
@@ -88,8 +85,8 @@ class CelestialBody():
                         objects_to_remove.append(object)
                         self.colliding = True
 
-                        game.PREVIOUS_TRAILS.append(self.trail_positions)
-                        game.PREVIOUS_TRAILS.append(object.trail_positions)
+                        game.PREVIOUS_TRAILS.append(self.trail_manager)
+                        game.PREVIOUS_TRAILS.append(object.trail_manager)
                 else:
                     # Run if the objects are not colliding e.i. they are attracting each other
 
@@ -162,3 +159,25 @@ class BinaryObject(CelestialBody):
                     self.position.y += dist_moved * math.sin(angle + math.pi)
 
         super().update(delta_time)
+
+
+
+class TrailManager:
+    def __init__(self) -> None:
+        self.trail_points = []
+        self.trail_length = 1000
+
+    def add_trail_point(self, position: Vector2D):
+        self.trail_points.append((position.x, position.y))
+
+        if len(self.trail_points) > self.trail_length:
+            self.trail_points.pop(0)
+
+    def draw(self):
+        trail_coordinates = []
+
+        for trail in self.trail_points:
+            trail_coordinates.append((trail[0] / game.DIST_PER_PIXEL + game.WIDTH / 2, trail[1] / game.DIST_PER_PIXEL + game.HEIGHT / 2))
+
+        if len(self.trail_points) > 1:
+            pygame.draw.lines(game.WIN, (0, 255, 0), False, trail_coordinates, 2)

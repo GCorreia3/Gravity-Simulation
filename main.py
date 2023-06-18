@@ -29,7 +29,7 @@ calculating_trajectory = False
 positions = list()
 
 spawnBinaryInterface = SpawnBinaryInterface(Vector2D(game.WIDTH/2, game.HEIGHT/2), game.WIDTH - 200, game.HEIGHT - 200)
-graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=0.01, y_start=0, y_end=20, y_start2=0, y_end2=20, x_axis_title="Time/s", y_axis_title="Velocity", y_axis_title2="Separation")
+graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=0.01, y_start=0, y_end=100000, y_start2=0, y_end2=10000, x_axis_title="Time/s", y_axis_title="Velocity m/s", y_axis_title2="Separation m")
 
 arrow_toggle = Toggle(Vector2D(game.WIDTH - 100, 25), 25, 25, "Arrows", (255, 255, 255), game.draw_arrows)
 trail_toggle = Toggle(Vector2D(game.WIDTH - 100, 60), 25, 25, "Trail", (255, 255, 255), game.draw_trails)
@@ -39,15 +39,12 @@ realistic_toggle = Toggle(Vector2D(game.WIDTH - 100, 95), 25, 25, "Realistic", (
 def draw_screen(positions, sim_time):
     game.WIN.fill((0, 0, 0)) # fills screen with colour
 
-    if game.draw_trails:
-        for object in game.OBJECTS:
-            # Draws trail
-            if len(object.trail_positions) > 1:
-                pygame.draw.lines(game.WIN, (0, 255, 0), False, object.trail_positions, 1)
+    # Draws trails for all objects
+    for object in game.OBJECTS:
+        object.trail_manager.draw()
 
-        for trail in game.PREVIOUS_TRAILS:
-            if len(trail) > 1:
-                pygame.draw.lines(game.WIN, (0, 150, 0), False, trail, 1)
+    for trail in game.PREVIOUS_TRAILS:
+        trail.draw()
 
     # Loops through objects which are in the game list
     for object in game.OBJECTS:
@@ -125,7 +122,11 @@ def update_objects(delta_time):
 def update_trajectory(delta_time, positions):
     if is_pressed:
         if calculating_trajectory:
-            object = CelestialBody(Vector2D((start_mouse_pos[0] - game.WIDTH / 2) * game.DIST_PER_PIXEL, (start_mouse_pos[1] - game.HEIGHT / 2) * game.DIST_PER_PIXEL), Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1]), game.START_MASS)
+            initial_velocity = Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1])
+            if game.realistic:
+                initial_velocity *= 1000
+
+            object = CelestialBody(Vector2D((start_mouse_pos[0] - game.WIDTH / 2) * game.DIST_PER_PIXEL, (start_mouse_pos[1] - game.HEIGHT / 2) * game.DIST_PER_PIXEL), initial_velocity * game.DIST_PER_PIXEL, game.START_MASS)
             game.TRAJECTORY_OBJECTS = copy.deepcopy(game.OBJECTS)
             game.TRAJECTORY_OBJECTS.append(object)
             for _ in range(2000):
@@ -193,7 +194,9 @@ def centre_of_mass(m1, m2, pos1: Vector2D, pos2: Vector2D):
 def mouse_up(start_mouse_pos, end_mouse_pos, start_mass):
     # Spawn new celestial body at the mouse position
     initial_velocity = Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1])
-
+    if game.realistic:
+        initial_velocity *= 1000
+    
     game.OBJECTS.append(CelestialBody(Vector2D((start_mouse_pos[0] - game.WIDTH / 2) * game.DIST_PER_PIXEL, (start_mouse_pos[1] - game.HEIGHT / 2) * game.DIST_PER_PIXEL), initial_velocity * game.DIST_PER_PIXEL, start_mass))
 
 
@@ -343,20 +346,21 @@ while running:
                             game.START_MASS = 1.989e30
                             game.DENSITY = 10e17
                             game.START_DIST = 100
+                            graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=0.01, y_start=0, y_end=100000, y_start2=0, y_end2=10000, x_axis_title="Time/s", y_axis_title="Velocity m/s", y_axis_title2="Separation m")
                             graph.x_axis_grid_separation = 0.0001
                             graph.y_axis_grid_separation = 100000
                             graph.graph_time = 0.00000000001
-                            graph.x_end = 0.01
+                            
                         else:
                             game.G = 1000
                             game.C = 300
                             game.START_MASS = 100
                             game.DENSITY = 1
                             game.START_DIST = 1
+                            graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=10, y_start=0, y_end=20, y_start2=0, y_end2=20, x_axis_title="Time/s", y_axis_title="Velocity", y_axis_title2="Separation")
                             graph.x_axis_grid_separation = 1
                             graph.y_axis_grid_separation = 10
                             graph.graph_time = 0.01
-                            graph.x_end = 30
 
                         reset()
                 else:
