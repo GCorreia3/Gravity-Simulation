@@ -230,7 +230,7 @@ class Toggle():
 
 
 class Graph():
-    def __init__(self, position: Vector2D, width, height, colour, x_start, x_end, y_start, y_end, y_start2, y_end2, x_axis_title, y_axis_title, y_axis_title2) -> None:
+    def __init__(self, position: Vector2D, width, height, colour, x_start, x_end, y_start, y_end, y_start2, y_end2, x_axis_title, y_axis_title, y_axis_title2, single) -> None:
         self.position: Vector2D = position
         self.width = width
         self.height = height
@@ -270,8 +270,10 @@ class Graph():
         self.y_axis_title = y_axis_title
         self.y_axis_title2 = y_axis_title2
 
+        self.single = single
+
         self.x_axis_grid_separation = 0.0001
-        self.y_axis_grid_separation = 100000
+        self.y_axis_grid_separation = 50
 
         self.graph_timer = 0
         self.graph_time = 0.00000000001
@@ -292,9 +294,10 @@ class Graph():
             new_y = y_proportion * self.y_coord_range
             return Vector2D(self.start_x_coords.x + new_x, self.start_y_coords2.y + new_y)
     
-    def add_point(self, point, point2):
+    def add_point(self, point, point2=None):
         self.points.append(point)
-        self.points2.append(point2)
+        if self.points2:
+            self.points2.append(point2)
 
     def draw_axis_info(self):
         # Draw x-axis labels
@@ -312,11 +315,12 @@ class Graph():
         game.WIN.blit(axis_y_end, (self.end_y_coords.x - axis_y_end.get_width() - self.text_offset, self.end_y_coords.y))
 
         # Draw y-axis labels 2
-        axis_y_start2 = game.text_font.render(f"{self.y_start2}", True, (255, 165, 0))
-        game.WIN.blit(axis_y_start2, (self.start_y_coords2.x + axis_y_start2.get_width()/2 + self.text_offset, self.start_y_coords2.y - axis_y_start2.get_height()/2))
+        if not self.single:
+            axis_y_start2 = game.text_font.render(f"{self.y_start2}", True, (255, 165, 0))
+            game.WIN.blit(axis_y_start2, (self.start_y_coords2.x + axis_y_start2.get_width()/2 + self.text_offset, self.start_y_coords2.y - axis_y_start2.get_height()/2))
 
-        axis_y_end2 = game.text_font.render(f"{round(self.y_end2, 2)}", True, (255, 165, 0))
-        game.WIN.blit(axis_y_end2, (self.end_y_coords2.x + axis_y_end2.get_width()/2, self.end_y_coords2.y))
+            axis_y_end2 = game.text_font.render(f"{round(self.y_end2, 2)}", True, (255, 165, 0))
+            game.WIN.blit(axis_y_end2, (self.end_y_coords2.x + axis_y_end2.get_width()/2, self.end_y_coords2.y))
 
         # Draw x-axis Title
         axis_x_title = game.text_font.render(self.x_axis_title, True, (255, 255, 255))
@@ -328,16 +332,20 @@ class Graph():
         game.WIN.blit(axis_y_title, (self.start_y_coords.x - axis_y_title.get_width()/2 - self.text_offset - 5, self.position.y - axis_y_title.get_height()/2))
 
         # Draw y-axis Title 2
-        axis_y_title2 = game.text_font.render(self.y_axis_title2, True, (255, 165, 0))
-        axis_y_title2 = pygame.transform.rotate(axis_y_title2, -90)
-        game.WIN.blit(axis_y_title2, (self.start_y_coords2.x + axis_y_title2.get_width()/2, self.position.y - axis_y_title2.get_height()/2))
+        if not self.single:
+            axis_y_title2 = game.text_font.render(self.y_axis_title2, True, (255, 165, 0))
+            axis_y_title2 = pygame.transform.rotate(axis_y_title2, -90)
+            game.WIN.blit(axis_y_title2, (self.start_y_coords2.x + axis_y_title2.get_width()/2, self.position.y - axis_y_title2.get_height()/2))
 
-    def update(self, delta_time, y_input, y_input2):
+    def update(self, delta_time, y_input, y_input2=None):
         if self.graph_timer < self.graph_time:
             self.graph_timer += delta_time
             self.graph_total_time += delta_time
         else:
-            self.add_point(Vector2D(self.graph_total_time, y_input), Vector2D(self.graph_total_time, y_input2))
+            if y_input2:
+                self.add_point(Vector2D(self.graph_total_time, y_input), Vector2D(self.graph_total_time, y_input2))
+            else:
+                self.add_point(Vector2D(self.graph_total_time, y_input))
             self.graph_timer = 0
 
         self.x_end = max(self.x_end, self.graph_total_time)
@@ -346,8 +354,9 @@ class Graph():
         self.y_end = max(self.y_end, y_input)
         self.y_range = self.y_end - self.y_start
 
-        self.y_end2 = max(self.y_end2, y_input2)
-        self.y_range2 = self.y_end2 - self.y_start2
+        if y_input2:
+            self.y_end2 = max(self.y_end2, y_input2)
+            self.y_range2 = self.y_end2 - self.y_start2
 
     def draw(self):
         # Draws background
@@ -377,7 +386,8 @@ class Graph():
 
         # Y-axis
         pygame.draw.line(game.WIN, (100, 100, 255), self.start_y_coords.to_coordinate(), self.end_y_coords.to_coordinate())
-        pygame.draw.line(game.WIN, (255, 165, 0), self.start_y_coords2.to_coordinate(), self.end_y_coords2.to_coordinate())
+        if not self.single:
+            pygame.draw.line(game.WIN, (255, 165, 0), self.start_y_coords2.to_coordinate(), self.end_y_coords2.to_coordinate())
         
 
         # Draws points
@@ -394,13 +404,14 @@ class Graph():
             info_text = game.text_font.render(f"{round(self.points[len(self.points)-1].y, 2)}", True, (255, 255, 255))
             game.WIN.blit(info_text, (self.point_to_position(self.points[len(self.points)-1], 0).x + info_text.get_width()/2, self.point_to_position(self.points[len(self.points)-1], 0).y - info_text.get_height()/2))
 
-        if len(self.points2) > 1:
+        if not self.single:
+            if len(self.points2) > 1:
 
-            if self.point_to_position(self.points2[len(self.points2)-1], 1).get_distance(self.point_to_position(self.points2[len(self.points2)-2], 1)) < 1:
-                self.points2.remove(self.points2[len(self.points2)-1])
+                if self.point_to_position(self.points2[len(self.points2)-1], 1).get_distance(self.point_to_position(self.points2[len(self.points2)-2], 1)) < 1:
+                    self.points2.remove(self.points2[len(self.points2)-1])
 
-            for i in range(len(self.points2) - 1):
-                pygame.draw.line(game.WIN, (255, 165, 0), self.point_to_position(self.points2[i], 1).to_coordinate(), self.point_to_position(self.points2[i+1], 1).to_coordinate(), 2)
+                for i in range(len(self.points2) - 1):
+                    pygame.draw.line(game.WIN, (255, 165, 0), self.point_to_position(self.points2[i], 1).to_coordinate(), self.point_to_position(self.points2[i+1], 1).to_coordinate(), 2)
 
         
         #for point in self.points:
