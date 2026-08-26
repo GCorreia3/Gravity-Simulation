@@ -72,7 +72,7 @@ def draw_screen(positions, sim_time):
     hours = (days - math.floor(days)) * 24
 
     minutes = (hours - math.floor(hours)) * 60
-    
+
     seconds = (minutes - math.floor(minutes)) * 60
 
     milliseconds = (sim_time - math.floor(sim_time)) * 1000
@@ -91,7 +91,7 @@ def draw_screen(positions, sim_time):
         time_text = f"{math.floor(minutes)}m, {math.floor(seconds)}s, {math.floor(milliseconds)}ms"
     else:
         time_text = f"{math.floor(seconds)}s, {math.floor(milliseconds)}ms, {math.floor(nanoseconds)}ns"
-    
+
     time_label = game.fps_font.render(time_text, True, (255, 255, 255))
     game.WIN.blit(time_label, (0, fps_label.get_height()))
 
@@ -137,7 +137,7 @@ def update_trajectory(delta_time, positions):
 
                         if o.position.x > game.WIDTH/2 * game.DIST_PER_PIXEL or o.position.x < -game.WIDTH/2 * game.DIST_PER_PIXEL or o.position.y > game.HEIGHT/2 * game.DIST_PER_PIXEL or o.position.y < -game.HEIGHT/2 * game.DIST_PER_PIXEL:
                             return positions
-                        
+
                         for bobject in game.TRAJECTORY_OBJECTS:
                             if bobject != o:
                                 if game.get_dist(o.position.x, o.position.y, bobject.position.x, bobject.position.y) < (o.radius + bobject.radius):
@@ -156,7 +156,7 @@ def iterate_pos(delta_time, object: CelestialBody):
 
     for o in game.TRAJECTORY_OBJECTS:
         if o != object:
-                
+
             o: CelestialBody = o
 
             distance = game.get_distance(o.position, intermediate_position) # Example of using functions from game
@@ -196,7 +196,7 @@ def mouse_up(start_mouse_pos, end_mouse_pos, start_mass):
     initial_velocity = Vector2D(end_mouse_pos[0] - start_mouse_pos[0], end_mouse_pos[1] - start_mouse_pos[1])
     if game.realistic:
         initial_velocity *= 1000
-    
+
     game.OBJECTS.append(CelestialBody(Vector2D((start_mouse_pos[0] - game.WIDTH / 2) * game.DIST_PER_PIXEL, (start_mouse_pos[1] - game.HEIGHT / 2) * game.DIST_PER_PIXEL), initial_velocity * game.DIST_PER_PIXEL, start_mass))
 
 
@@ -272,7 +272,7 @@ while running:
 
     draw_screen(positions, sim_time)
 
-    
+
     keys_pressed = pygame.key.get_pressed()
 
     if not spawnBinaryInterface.open:
@@ -343,25 +343,25 @@ while running:
                         calculating_trajectory = True
                     else:
                         game.realistic = realistic_toggle.condition
-                        
+
                         if game.realistic:
                             game.G = 6.67e-11
                             game.C = 3e8
                             game.START_MASS = 1.989e30
                             game.DENSITY = 10e17
                             game.START_DIST = 100
-                            graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=0.01, y_start=0, y_end=100000, y_start2=0, y_end2=10000, x_axis_title="Time/s", y_axis_title="Velocity m/s", y_axis_title2="Separation m")
+                            graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=0.01, y_start=0, y_end=100000, y_start2=0, y_end2=10000, x_axis_title="Time/s", y_axis_title="Velocity m/s", y_axis_title2="Separation m", single=True)
                             graph.x_axis_grid_separation = 0.0001
                             graph.y_axis_grid_separation = 100000
                             graph.graph_time = 0.00000000001
-                            
+
                         else:
                             game.G = 1000
                             game.C = 300
                             game.START_MASS = 100
                             game.DENSITY = 1
                             game.START_DIST = 1
-                            graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=10, y_start=0, y_end=20, y_start2=0, y_end2=20, x_axis_title="Time/s", y_axis_title="Velocity", y_axis_title2="Separation")
+                            graph = Graph(Vector2D(game.WIDTH/2, game.HEIGHT-125), game.WIDTH*3.5/4, 250, (10, 10, 15), x_start=0, x_end=10, y_start=0, y_end=20, y_start2=0, y_end2=20, x_axis_title="Time/s", y_axis_title="Velocity", y_axis_title2="Separation", single=True)
                             graph.x_axis_grid_separation = 1
                             graph.y_axis_grid_separation = 10
                             graph.graph_time = 0.01
@@ -373,7 +373,7 @@ while running:
 
             else:
                 spawnBinaryInterface.check_click(pygame.mouse.get_pos())
-        
+
         elif event.type == pygame.MOUSEMOTION:
             if not spawnBinaryInterface.open:
                 end_mouse_pos = pygame.mouse.get_pos()
