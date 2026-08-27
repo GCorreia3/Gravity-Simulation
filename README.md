@@ -9,7 +9,7 @@ The emission of gravitational waves is simulated by reducing the stored energy o
 Thus the project explores the binary systems until they merge and I have created a real time graph from scratch to plot the separation over time.
 I use a custom vector class instead of numpy to learn more about classes and how to write methods in classes.
 
-Produces a result similar to the observed gravitational events from the LIGO.
+Produces a result similar to the observed gravitational events from the LIGO (event GW150914 which was the first detection by the LIGO).
 For example, set the two masses to be 29 and 36 solar masses with a distance of 90km.
 The official LIGO data shows that the time to merge should be 0.2s and the simulation gets around 0.22s ish which is roughly 10% off.
 
