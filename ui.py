@@ -69,9 +69,11 @@ class SpawnBinaryInterface():
 
         game.OBJECTS.append(object1)
         game.OBJECTS.append(object2)
+        
+        print(f"Initial energy")
 
         self.open = False
-    
+
     def update(self):
         self.mass1 = int(self.mass1_slider.value)
         self.mass2 = int(self.mass2_slider.value)
@@ -120,14 +122,14 @@ class Slider():
     def value_to_width(self, value):
        value_ratio = (value - self.min_value) / (self.max_value - self.min_value)
        return value_ratio * self.width
-    
+
     def value_to_pos(self, value):
         pixel_width = self.value_to_width(value)
 
         dist_from_centre = pixel_width - self.width/2
 
         return Vector2D(self.position.x + dist_from_centre, self.position.y)
-    
+
     def pos_to_value(self, pos):
         x_difference = pos[0] - self.value_to_pos(self.min_value).x + self.drag_offset.x
         value = (x_difference / self.width) * self.value_range
@@ -135,7 +137,7 @@ class Slider():
         value += self.min_value
 
         return min(self.max_value, max(self.min_value, value))
-    
+
     def drag(self, mouse):
         self.value = self.pos_to_value(mouse)
 
@@ -209,7 +211,7 @@ class Toggle():
         if abs(mouse[0] - self.position.x) <= self.width/2 and abs(mouse[1] - self.position.y) <= self.height/2:
             self.pressed()
             return True
-        
+
         return False
 
     def pressed(self):
@@ -293,7 +295,7 @@ class Graph():
             y_proportion = point.y / self.y_range2
             new_y = y_proportion * self.y_coord_range
             return Vector2D(self.start_x_coords.x + new_x, self.start_y_coords2.y + new_y)
-    
+
     def add_point(self, point, point2=None):
         self.points.append(point)
         if self.points2:
@@ -373,14 +375,14 @@ class Graph():
         if num_y_lines > 10:
             self.y_axis_grid_separation *= 2
             num_y_lines = self.y_range / self.y_axis_grid_separation
-        
+
         for x in range(int(num_x_lines)):
             pygame.draw.line(game.WIN, (100, 100, 100), (self.start_y_coords.x + (x+1)/(self.x_range / self.x_axis_grid_separation) * self.x_coord_range, self.start_y_coords.y), (self.end_y_coords.x + (x+1)/(self.x_range / self.x_axis_grid_separation) * self.x_coord_range, self.end_y_coords.y))
-        
+
         for y in range(int(self.y_range / self.y_axis_grid_separation)):
             pygame.draw.line(game.WIN, (100, 100, 100), (self.start_x_coords.x, self.start_x_coords.y + (y+1)/(self.y_range / self.y_axis_grid_separation) * self.y_coord_range), (self.end_x_coords.x, self.end_x_coords.y + (y+1)/(self.y_range / self.y_axis_grid_separation) * self.y_coord_range))
 
-        
+
         # X-axis
         pygame.draw.line(game.WIN, (255, 255, 255), self.start_x_coords.to_coordinate(), self.end_x_coords.to_coordinate())
 
@@ -388,7 +390,7 @@ class Graph():
         pygame.draw.line(game.WIN, (100, 100, 255), self.start_y_coords.to_coordinate(), self.end_y_coords.to_coordinate())
         if not self.single:
             pygame.draw.line(game.WIN, (255, 165, 0), self.start_y_coords2.to_coordinate(), self.end_y_coords2.to_coordinate())
-        
+
 
         # Draws points
         if len(self.points) > 1:
@@ -413,7 +415,7 @@ class Graph():
                 for i in range(len(self.points2) - 1):
                     pygame.draw.line(game.WIN, (255, 165, 0), self.point_to_position(self.points2[i], 1).to_coordinate(), self.point_to_position(self.points2[i+1], 1).to_coordinate(), 2)
 
-        
+
         #for point in self.points:
             #pygame.draw.circle(WIN, (255, 255, 255), self.point_to_position(point), 5)
 

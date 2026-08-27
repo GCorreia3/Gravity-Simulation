@@ -64,7 +64,7 @@ def draw_screen(positions, sim_time):
     fps_label = game.fps_font.render(f"FPS: {round(get_average_fps(delta_time))}", True, (255, 255, 255))
     game.WIN.blit(fps_label, (0, 0))
 
-    # Goofy ahh way of calculating time
+    # Calculating time
     years = sim_time / 3.1536e7
 
     days = (years - math.floor(years)) * 365
@@ -239,6 +239,7 @@ def quit():
 
 delta_time = 1
 sim_time = 0
+clock = pygame.time.Clock()
 
 # Main loop
 while running:
@@ -391,5 +392,5 @@ while running:
                 spawnBinaryInterface.release_drag()
 
     end_time = perf_counter() # Get end time of the frame
-    delta_time = end_time - start_time # delta_time is how long it takes for each frame to compute, this can then be used to make code frame rate independent
-    delta_time *= game.TIME_SPEED
+    clock.tick(360)#end_time - start_time # delta_time is how long it takes for each frame to compute, this can then be used to make code frame rate independent
+    delta_time=1/360 * game.TIME_SPEED

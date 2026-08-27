@@ -44,7 +44,7 @@ class CelestialBody():
 
         if game.get_dist(self.position.x, self.position.y, self.last_spawn_pos.x, self.last_spawn_pos.y) / game.DIST_PER_PIXEL >= self.dist_between_spawns:
             self.trail_manager.add_trail_point(self.position)
-            
+
             self.last_spawn_pos = self.position
 
         intermediate_position = self.position + self.velocity * (delta_time / 2)
@@ -73,7 +73,7 @@ class CelestialBody():
                 direction = object.position - position
 
                 # Calculates if the object and self are colliding
-                if distance < self.radius:
+                if distance < self.radius + object.radius:
                     # If colliding is true, then skip this frame and wait until next frame to collide with the newly formed object (fixes collision in same frame)
                     if self.colliding == False:
                         combined_mass = self.mass + object.mass
@@ -111,7 +111,7 @@ class CelestialBody():
         for object in objects_to_remove:
             if object in game.OBJECTS:
                 game.OBJECTS.remove(object)
-        
+
         # Quick code to add up the x and y's of all of the accelerations calculated with every other object
         x = 0
         y = 0
@@ -140,7 +140,7 @@ class BinaryObject(CelestialBody):
         self.energy = 0
 
     def update(self, delta_time):
-        
+
         if len(game.OBJECTS) == 2:
             for object in game.OBJECTS:
                 if object != self:

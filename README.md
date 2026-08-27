@@ -1,5 +1,7 @@
 # About this project
 
+![alt text](https://github.com/GCorreia3/Gravity-Simulation/blob/master/gravitysim2.png?raw=true)
+
 For my schools independent project, I chose to study how to simulate binary systems and how blackholes emit gravitational waves.
 This project is an N-body gravity simulation using Newtons gravity and leapfrog integration.
 The emission of gravitational waves is simulated by reducing the stored energy of orbiting bodies and thus the distance between the bodies decreases.
