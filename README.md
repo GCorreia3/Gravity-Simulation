@@ -13,6 +13,10 @@ Produces a result similar to the observed gravitational events from the LIGO (ev
 For example, set the two masses to be 29 and 36 solar masses with a distance of 90km.
 The official LIGO data shows that the time to merge should be 0.2s and the simulation gets around 0.22s ish which is roughly 10% off.
 
+For spawning two black holes each of 1 solar mass 30km apart and measuring the time to spiral in, the time is 1.33% off of a simplified equation.
+My time fromt the simulation was 8ms and 298ns and from the equation the time should be 8ms and 189ns.
+Find the equation from https://en.wikipedia.org/wiki/Gravitational_wave for the time to merge
+
 The error of the Simulation is second order with respect to the time step.
 
 Completed Summer 2023
