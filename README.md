@@ -18,7 +18,7 @@ The error of the Simulation is second order with respect to the time step.
 Completed Summer 2023
 Did some error analysis in 2026
 - Shows the simulation errors are second order with respect to time as the plot is a quadratic
-- The errors are very low after 3 minuts with being around 0.02%
+- The errors are very low after 3 minutes with being around 0.02%
 
 ![alt text](https://github.com/GCorreia3/Gravity-Simulation/blob/master/percentage_error_vs_time_step.png?raw=true)
 
