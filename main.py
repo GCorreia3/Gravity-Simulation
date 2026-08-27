@@ -240,6 +240,7 @@ def quit():
 delta_time = 1
 sim_time = 0
 clock = pygame.time.Clock()
+dt = [0.4, 0.2, 0.1, 0.05, 0.025, 0.0125, 0.00625]
 
 # Main loop
 while running:
@@ -248,6 +249,22 @@ while running:
 
     update_objects(delta_time)
     positions = update_trajectory(delta_time, positions)
+
+    # Calculate energy difference
+    if len(game.OBJECTS) == 2:
+        object1 : CelestialBody = game.OBJECTS[0]
+        mass1 = object1.mass
+        vel1 = object1.velocity.magnitude()
+        object2 : CelestialBody = game.OBJECTS[1]
+        mass2 = object2.mass
+        vel2 = object2.velocity.magnitude()
+
+        current_energy = 0.5*mass1*(vel1)**2 + 0.5*mass2*(vel2)**2 - 2*game.G*mass1*mass2/abs(game.get_distance(object1.position, object2.position))
+        energy_error = abs(current_energy - game.initial_energy) / abs(game.initial_energy)
+        if sim_time >= 180: # 3 mins
+            print(f"For timestep {dt[0]}s energy error:{energy_error*100}%")
+            paused=True
+            sim_time=0
 
     if spawnBinaryInterface.open:
         spawnBinaryInterface.update()
@@ -392,5 +409,5 @@ while running:
                 spawnBinaryInterface.release_drag()
 
     end_time = perf_counter() # Get end time of the frame
-    clock.tick(360)#end_time - start_time # delta_time is how long it takes for each frame to compute, this can then be used to make code frame rate independent
-    delta_time=1/360 * game.TIME_SPEED
+    clock.tick(1/dt[0])#end_time - start_time # delta_time is how long it takes for each frame to compute, this can then be used to make code frame rate independent
+    delta_time=dt[0] * game.TIME_SPEED

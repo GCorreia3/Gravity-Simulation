@@ -27,6 +27,8 @@ START_DIST = 100
 
 TIME_SPEED = 1
 
+initial_energy = 0
+
 draw_arrows = True
 draw_trails = True
 

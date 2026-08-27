@@ -69,8 +69,9 @@ class SpawnBinaryInterface():
 
         game.OBJECTS.append(object1)
         game.OBJECTS.append(object2)
-        
-        print(f"Initial energy")
+
+        game.initial_energy = 0.5*m1*(v1)**2 + 0.5*m2*(v2)**2 - 2*game.G*m1*m2/abs(x2+x1)
+        print(game.initial_energy)
 
         self.open = False
 
